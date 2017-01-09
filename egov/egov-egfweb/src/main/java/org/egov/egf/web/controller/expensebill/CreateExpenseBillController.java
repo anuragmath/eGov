@@ -183,7 +183,14 @@ public class CreateExpenseBillController extends BaseBillController {
         case  WorkflowConstants.ACTION_SAVE :
             message=messageSource.getMessage("msg.expense.bill.saved.success",
                     new String[] {egBillregister.getBillnumber()},Locale.getDefault());
-            break;   
+            break;
+
+        case  WorkflowConstants.ACTION_CREATE_AND_APPROVE :
+            message=messageSource.getMessage("msg.expense.bill.create.success",
+                    new String[] {egBillregister.getBillnumber()},null);
+            break;  
+            
+            
 
         }
         return message;

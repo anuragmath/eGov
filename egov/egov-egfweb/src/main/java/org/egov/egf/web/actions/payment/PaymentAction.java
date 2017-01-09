@@ -83,18 +83,17 @@ import org.egov.infra.utils.DateUtils;
 import org.egov.infra.validation.exception.ValidationError;
 import org.egov.infra.validation.exception.ValidationException;
 import org.egov.infra.web.struts.annotation.ValidationErrorPage;
-import org.egov.infra.workflow.entity.State;
-import org.egov.infra.workflow.matrix.entity.WorkFlowMatrix;
+import org.egov.infra.workflow.multitenant.model.WorkflowBean;
+import org.egov.infra.workflow.multitenant.model.WorkflowConstants;
 import org.egov.infra.workflow.multitenant.model.WorkflowEntity;
 import org.egov.infra.workflow.multitenant.service.BaseWorkFlow;
+import org.egov.infra.workflow.service.StateService;
 import org.egov.model.advance.EgAdvanceRequisition;
 import org.egov.model.bills.EgBillregister;
 import org.egov.model.bills.Miscbilldetail;
 import org.egov.model.instrument.InstrumentHeader;
 import org.egov.model.payment.PaymentBean;
 import org.egov.model.payment.Paymentheader;
-import org.egov.infra.workflow.multitenant.model.WorkflowBean;
-import org.egov.infra.workflow.multitenant.model.WorkflowConstants;
 import org.egov.payment.services.PaymentActionHelper;
 import org.egov.services.payment.PaymentService;
 import org.egov.services.voucher.VoucherService;
@@ -209,8 +208,7 @@ public class PaymentAction extends BasePaymentAction {
     private FinancialYearHibernateDAO financialYearDAO;
     @Autowired
     private PaymentActionHelper paymentActionHelper;
-    private String cutOffDate;
-    DateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
+     DateFormat df = new SimpleDateFormat("dd-MMM-yyyy");
     DateFormat sdf1 = new SimpleDateFormat("dd/MM/yyyy");
     SimpleDateFormat formatter1 = new SimpleDateFormat("yyyy-MM-dd");
     Date date;
@@ -223,6 +221,8 @@ public class PaymentAction extends BasePaymentAction {
         if (LOGGER.isDebugEnabled())
             LOGGER.debug("creating PaymentAction completed.");
     }
+    @Autowired
+	StateService stateService;
 
     @Override
     public void prepare() {
@@ -484,7 +484,7 @@ public class PaymentAction extends BasePaymentAction {
         {
             egwStatus = egwStatusHibernateDAO.getStatusByModuleAndCode("SBILL", "Approved");
             final EgwStatus egwStatus1 = egwStatusHibernateDAO.getStatusByModuleAndCode("PURCHBILL", "Passed");
-            String statusCheck = "";
+            String statusCheck="";
             if (egwStatus == null)
             {
                 statusCheck = " and bill.status in (" + egwStatus1.getId() + ") ";
@@ -782,18 +782,7 @@ public class PaymentAction extends BasePaymentAction {
     @Action(value = "/payment/payment-save")
     public String save() throws ValidationException {
         final List<PaymentBean> paymentList = new ArrayList<PaymentBean>();
-        List<AppConfigValues> cutOffDateconfigValue = appConfigValuesService.getConfigValuesByModuleAndKey("EGF",
-                "DataEntryCutOffDate");
-        if (cutOffDateconfigValue != null && !cutOffDateconfigValue.isEmpty())
-        {
-            try {
-                date = df.parse(cutOffDateconfigValue.get(0).getValue());
-                cutOffDate = formatter.format(date);
-            } catch (ParseException e) {
-
-            }
-        }
-        
+        super.prepareNewform();
         workflowBean.setBusinessKey(paymentheader.getClass().getSimpleName());
         prepareWorkflow(null, paymentheader, workflowBean);
         try {
@@ -946,12 +935,10 @@ public class PaymentAction extends BasePaymentAction {
     @SkipValidation
     @Action(value = "/payment/payment-create")
     public String create() {
-        try {
+         try {
+        	
             String vdate = parameters.get("voucherdate")[0];
-            Date date1 = sdf1.parse(vdate);
-            String voucherDate = formatter1.format(date1);
-            String cutOffDate1 = null;
-            // billregister.getEgBillregistermis().setFunction(functionSel);
+            validateCutOffDate(formatter.parse(vdate));
             paymentActionHelper.setbillRegisterFunction(billregister, cFunctionobj);
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("Starting createPayment...");
@@ -963,20 +950,10 @@ public class PaymentAction extends BasePaymentAction {
                 billregister.getEgBillregistermis().setFunction(
                         functionService.findOne(Long.valueOf(parameters.get("function")[0].toString())));
             paymentheader = paymentService.createPayment(parameters, billList, billregister, workflowBean);
-            miscBillList = paymentActionHelper.getPaymentBills(paymentheader);
            
-
-            if (!cutOffDate.isEmpty() && cutOffDate != null)
-            {
-                try {
-                    date = sdf1.parse(cutOffDate);
-                    cutOffDate1 = formatter1.format(date);
-                } catch (ParseException e) {
-                  //
-                }
-            }
+            miscBillList = paymentActionHelper.getPaymentBills(paymentheader);
             addActionMessage(generateMessage(paymentheader, workflowBean));
-        } catch (final ValidationException e) {
+         } catch (final ValidationException e) {
             final List<ValidationError> errors = new ArrayList<ValidationError>();
             errors.add(new ValidationError("exception", e.getErrors().get(0).getMessage()));
             loadbankBranch(billregister.getEgBillregistermis().getFund());
@@ -1040,11 +1017,15 @@ public class PaymentAction extends BasePaymentAction {
             break;
         case  WorkflowConstants.ACTION_REJECT :
             message=getText("payment.reject", new String[] {paymentheader.getVoucherheader().getVoucherNumber(),workflowBean.getApproverName(),workflowBean.getApproverDesignationName()});
-            break;   
-        case  WorkflowConstants.ACTION_FORWARD :
-            message=getText("payment.create.success",
-                    new String[] {paymentheader.getVoucherheader().getVoucherNumber(),workflowBean.getApproverName(),workflowBean.getApproverDesignationName()});
             break;    
+            
+        case WorkflowConstants.ACTION_FORWARD:
+			message=getText("payment.create.success",
+					new String[] {paymentheader.getVoucherheader().getVoucherNumber(),workflowBean.getApproverName(),workflowBean.getApproverDesignationName()});
+			if(paymentheader.getVoucherheader().getVouchermis().getBudgetaryAppnumber()!=null)
+				message=message+getText("budget.appr.number.success", new String[] {paymentheader.getVoucherheader().getVouchermis().getBudgetaryAppnumber()});
+			break;
+			
         case  WorkflowConstants.ACTION_CANCEL :
             message=getText("payment.cancel",
                     new String[] {paymentheader.getVoucherheader().getVoucherNumber()});
@@ -1053,7 +1034,13 @@ public class PaymentAction extends BasePaymentAction {
             message=getText("payment.saved.success",
                     new String[] {paymentheader.getVoucherheader().getVoucherNumber()});
             break;   
-
+		 
+		case WorkflowConstants.ACTION_CREATE_AND_APPROVE:
+			message = getText("payment.approved.success",
+					new String[] { paymentheader.getVoucherheader().getVoucherNumber() });
+			if(paymentheader.getVoucherheader().getVouchermis().getBudgetaryAppnumber()!=null)
+				message=message+getText("budget.appr.number.success", new String[] {paymentheader.getVoucherheader().getVouchermis().getBudgetaryAppnumber()});
+			break;
         }
         return message;
     }
@@ -2138,14 +2125,6 @@ public class PaymentAction extends BasePaymentAction {
     public void setEgwStatusHibernateDAO(final EgwStatusHibernateDAO egwStatusHibernateDAO) {
         this.egwStatusHibernateDAO = egwStatusHibernateDAO;
     }
- 
-   
-    public String getCutOffDate() {
-        return cutOffDate;
-    }
 
-    public void setCutOffDate(String cutOffDate) {
-        this.cutOffDate = cutOffDate;
-    }
 
 }

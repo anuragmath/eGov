@@ -46,6 +46,8 @@
 <link rel="stylesheet"
 	href="/EGF/resources/css/tabber.css?rnd=${app_release_no}"
 	TYPE="text/css">
+	<script type="text/javascript"
+	src="${pageContext.request.contextPath}/resources/javascript/voucherHelper.js?rnd=${app_release_no}"></script>
 <script type="text/javascript"
 	src="/EGF/resources/javascript/tabber.js?rnd=${app_release_no}"></script>
 <script type="text/javascript"
@@ -628,6 +630,10 @@
 		function onSubmit()
 		{
 			doLoadingMask();
+			
+ 			 if(!validateCutOff())
+				return false; 
+			 
 			if(dom.get('department').value=='-1')
 			{
 				bootbox.alert("Please Select the Department!!");
@@ -702,25 +708,27 @@
 				return true;
 				}
 		}
-
 		function validateCutOff()
 		{
-		var cutOffDatePart=document.getElementById("cutOffDate").value.split("/");
-		var voucherDatePart=document.getElementById("voucherdate").value.split("/");
-		var cutOffDate = new Date(cutOffDatePart[1] + "/" + cutOffDatePart[0] + "/"
-				+ cutOffDatePart[2]);
-		var voucherDate = new Date(voucherDatePart[1] + "/" + voucherDatePart[0] + "/"
-				+ voucherDatePart[2]);
-		if(voucherDate<=cutOffDate)
-		{
-			return true;
-		}
-		else{
+			 
+			console.log("validate cutt off3");
+			if(document.getElementById("workflowAction").value.trim()=='Create And Approve')
+			{
+		    var cutOffDate1= jQuery('#cutOffDate').val();  
+		    var voucherDate1= jQuery('#voucherdate').val();  
+
+			if(!validateCreateAndApprove(cutOffDate1,voucherDate1))
+			{
 			var msg1='<s:text name="wf.vouchercutoffdate.message"/>';
 			var msg2='<s:text name="wf.cutoffdate.msg"/>';
+			undoLoadingMask();
 			bootbox.alert(msg1+" "+document.getElementById("cutOffDate").value+" "+msg2);
 				return false;
 			}
+ 
+			} 
+			return true;
+		
 		}
 				
 		function checkLength(obj)

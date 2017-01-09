@@ -71,17 +71,10 @@
 				return false;
 	    	}
 		}
-		<s:if test="workflowBean.nextAction!='END'}">
 	    if((name=="Forward" || name=="forward") && approverPosId && (approverPosId.value == -1 || approverPosId.value == "")) {
 	    	bootbox.alert("Please Select the Approver ");
 			return false;
 	    }
-	    if((name=="Create And Approve")) {
-
-		    if(!validateCutOff())
-	    		return false;
-	    }
-	    </s:if>
 	    return  onSubmit();
 	}
 </script>

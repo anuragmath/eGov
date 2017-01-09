@@ -8,7 +8,7 @@ public class WorkflowConstants {
     public static final String ACTION_APPROVE="approve";
     public static final String ACTION_SAVE="save";
     public static final String ACTION_CANCEL="cancel";
-    public static final String ACTION_CREATE_AND_APPROVE = "create_and_approve";
+    public static final String ACTION_CREATE_AND_APPROVE = "create and approve";
     public static final String STATUS_REJECTED = "Rejected";
 
 

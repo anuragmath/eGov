@@ -453,7 +453,7 @@ function onSubmit()
 
  function validateCutOff()
 {
- ;
+ 
 	if(document.getElementById("workflowAction").value.trim()=='Create And Approve')
 	{
     var cutOffDate=document.getElementById('cutOffDate').value;

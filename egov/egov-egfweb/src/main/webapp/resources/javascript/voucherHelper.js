@@ -2316,5 +2316,20 @@ var callbackProjectCodes = {
     }
 }
 
+function validateCreateAndApprove(cutOffDateStr, voucherDateStr) {
+	var cutOffDatePart = cutOffDateStr.split("-");
+	var voucherDatePart = voucherDateStr.split("/");
+	var cutOffDate = new Date(cutOffDatePart[1] + "-" + cutOffDatePart[0] + "-"
+			+ cutOffDatePart[2]);
+	var voucherDate = new Date(voucherDatePart[1] + "/" + voucherDatePart[0]
+			+ "/" + voucherDatePart[2]);
+	if (voucherDate <= cutOffDate) {
+		return true;
+	} else {
+		return false;
+	}
+
+}
+
 
 

@@ -3387,7 +3387,7 @@ public class PaymentService extends PersistenceService<Paymentheader, Long> {
 		Paymentheader paymentheader = new Paymentheader();
 		paymentheader.setType(type);
 		paymentheader.setVoucherheader(voucherHeader);
-		final Bankaccount bankaccount = (Bankaccount) getSession().load(
+		final Bankaccount bankaccount = getSession().load(
 				Bankaccount.class, bankaccountId.longValue());
 		paymentheader.setBankaccount(bankaccount);
 		paymentheader.setPaymentAmount(amount);
