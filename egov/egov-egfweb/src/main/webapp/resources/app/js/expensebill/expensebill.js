@@ -75,23 +75,29 @@ $(document).ready(function(){
 
 $('.btn-wf-primary').click(function(){
 	var button = $(this).attr('id');
-	 if (button != null && (button == 'Create And Approve')) {
-		$('#approvalDepartment').removeAttr('required');
-		$('#approvalDesignation').removeAttr('required');
-		$('#approvalPosition').removeAttr('required');
-		$('#approvalComent').removeAttr('required');
-		if(!validateCutOffDate(button))
-			return false;
-		if(!$("form").valid())
-			return false;
-		if(validate()){
-			deleteHiddenSubledgerRow();
-			return true;
-		}else
-			return false;
-	} else {
-			if(!validateCutOffDate(button))
-				return false;
+	 if (button != null && (button.trim()== "Create And Approve")) {
+		 if(!validateCutOffDate(button))
+			 return false;
+		 else
+		 {
+		    $('#approverDepartmentId').removeAttr('required');
+			$('#approverDesignationId').removeAttr('required');
+			$('#approverPositionId').removeAttr('required');
+			$('#workflowComments').removeAttr('required', 'required');
+		 }
+		 if(!$("form").valid())
+			{
+				 return false;
+			}
+			if(validate()){
+					deleteHiddenSubledgerRow();
+					$("#workflowAction").val(" Create And Approve");
+					return true;
+			}
+	
+			 return true;
+	 } else {
+			
 			validate(button);
 			validateWorkflow(button);
 			
@@ -104,7 +110,7 @@ $('.btn-wf-primary').click(function(){
 				return false;
 			
 		}
-	return false;
+	return true;
 });
 function deleteHiddenSubledgerRow(){
 	var subLedgerCount = $("#tblsubledgerdetails > tbody > tr:visible[id='subledhgerrow']").length;
