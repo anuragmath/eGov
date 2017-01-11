@@ -70,6 +70,9 @@ import org.egov.commons.Vouchermis;
 import org.egov.commons.dao.FinancialYearDAO;
 import org.egov.egf.model.VoucherReportView;
 import org.egov.egf.web.actions.voucher.VoucherSearchAction;
+import org.egov.eis.entity.Assignment;
+import org.egov.eis.entity.Employee;
+import org.egov.eis.service.AssignmentService;
 import org.egov.infra.admin.master.entity.AppConfigValues;
 import org.egov.infra.admin.master.entity.Boundary;
 import org.egov.infra.admin.master.entity.Department;
@@ -78,7 +81,8 @@ import org.egov.infra.exception.ApplicationException;
 import org.egov.infra.web.struts.actions.BaseFormAction;
 import org.egov.infra.web.struts.annotation.ValidationErrorPage;
 import org.egov.infra.web.utils.EgovPaginatedList;
-import org.egov.infra.workflow.multitenant.model.Task;
+import org.egov.infra.workflow.multitenant.model.ProcessInstance;
+import org.egov.infra.workflow.multitenant.service.BaseWorkFlow;
 import org.egov.infstr.services.Page;
 import org.egov.infstr.services.PersistenceService;
 import org.egov.model.contra.ContraJournalVoucher;
@@ -127,16 +131,20 @@ public class VoucherStatusReportAction extends BaseFormAction
     private EgovPaginatedList pagedResults;
     private String countQry;
     private String modeOfPayment;
-   @Autowired 
+    @Autowired 
     private AppConfigValueService appConfigValueService;
- @Autowired
- @Qualifier("persistenceService")
- private PersistenceService persistenceService;
- @Autowired
+    @Autowired
+    @Qualifier("persistenceService")
+    private PersistenceService persistenceService;
+    @Autowired
     private FinancialYearDAO financialYearDAO;
 
     List<String> voucherTypes = VoucherHelper.VOUCHER_TYPES;
     Map<String, List<String>> voucherNames = VoucherHelper.VOUCHER_TYPE_NAMES;
+    @Autowired
+    private BaseWorkFlow baseWorkFlow;
+    @Autowired
+    private AssignmentService assignmentService;
 
     @Override
     public Object getModel() {
@@ -216,15 +224,15 @@ public class VoucherStatusReportAction extends BaseFormAction
     {
         final List<AppConfigValues> appConfigList = appConfigValueService.getConfigValuesByModuleAndKey(FinancialConstants.MODULE_NAME_APPCONFIG, "DEFAULT_SEARCH_MISATTRRIBUTES");
 
-            for (final AppConfigValues appConfigVal : appConfigList)
-            {
-                final String value = appConfigVal.getValue();
-                final String header = value.substring(0, value.indexOf('|'));
-                headerFields.add(header);
-                final String mandate = value.substring(value.indexOf('|') + 1);
-                if (mandate.equalsIgnoreCase("M"))
-                    mandatoryFields.add(header);
-            }
+        for (final AppConfigValues appConfigVal : appConfigList)
+        {
+            final String value = appConfigVal.getValue();
+            final String header = value.substring(0, value.indexOf('|'));
+            headerFields.add(header);
+            final String mandate = value.substring(value.indexOf('|') + 1);
+            if (mandate.equalsIgnoreCase("M"))
+                mandatoryFields.add(header);
+        }
 
     }
 
@@ -309,8 +317,8 @@ public class VoucherStatusReportAction extends BaseFormAction
                 dropdownData.put("schemeList", Collections.emptyList());
         if (headerFields.contains("subscheme"))
             if (voucherHeader.getVouchermis() != null
-                    && voucherHeader.getVouchermis().getSchemeid() != null
-                    && voucherHeader.getVouchermis().getSchemeid().getId() != -1)
+            && voucherHeader.getVouchermis().getSchemeid() != null
+            && voucherHeader.getVouchermis().getSchemeid().getId() != -1)
                 dropdownData.put("subSchemeList", persistenceService.findAllBy(
                         "from SubScheme where isactive=true and scheme.id=?",
                         voucherHeader.getVouchermis().getSchemeid().getId()));
@@ -463,7 +471,8 @@ public class VoucherStatusReportAction extends BaseFormAction
         final String dash = "-";
         final Integer voucherStatus = voucherHeader.getStatus();
         final String voucherType = voucherHeader.getType();
-        Task voucherState = null;
+        String voucherState = null;
+        String businessKey="";
         if (voucherStatus.longValue() == FinancialConstants.CANCELLEDVOUCHERSTATUS.longValue()
                 || voucherStatus.longValue() == FinancialConstants.CREATEDVOUCHERSTATUS.longValue())
             return dash;
@@ -471,44 +480,55 @@ public class VoucherStatusReportAction extends BaseFormAction
         {
             final ContraJournalVoucher contraJV = (ContraJournalVoucher) persistenceService.find(
                     "from ContraJournalVoucher cj where cj.voucherHeaderId=?", voucherHeader);
-            if (contraJV == null)
-                return dash;
-            else
-                voucherState = contraJV.getCurrentTask();
-            if (voucherState == null)
-                return dash;
-            else if (voucherState.getStatus().equals("END"))
-                return dash;
-            else
-                return getUserNameForPosition(voucherState.getOwnerPosition().getId().intValue());
+            voucherState = contraJV.getWorkflowId();  
+            businessKey=contraJV.getClass().getSimpleName();
+
         }
         else if (voucherType.equalsIgnoreCase(FinancialConstants.STANDARD_VOUCHER_TYPE_JOURNAL))
         {
-            voucherState = voucherHeader.getCurrentTask();
-            if (voucherState == null)
-                return dash;
-            else if (voucherState.getStatus().equals("END"))
-                return dash;
-            else
-                return getUserNameForPosition(voucherState.getOwnerPosition().getId().intValue());
+            voucherState = voucherHeader.getWorkflowId();
+            businessKey=voucherHeader.getClass().getSimpleName();
         }
         else if (voucherType.equalsIgnoreCase(FinancialConstants.STANDARD_VOUCHER_TYPE_PAYMENT))
         {
             final Paymentheader paymentHeader = (Paymentheader) persistenceService.find(
                     "from Paymentheader ph where ph.voucherheader=?", voucherHeader);
-            if (paymentHeader == null)
-                return dash;
+            voucherState = paymentHeader.getWorkflowId();
+            businessKey=paymentHeader.getClass().getSimpleName();
+        }
+        if(voucherState!=null)
+        {
+            ProcessInstance currentTask=new ProcessInstance();
+            currentTask.setId(voucherState);
+            currentTask.setEntity(voucherHeader);
+            currentTask.setBusinessKey(businessKey);
+            currentTask=   baseWorkFlow.getProcess(currentTask);
+            Employee employee=null;
+            Assignment  assignment=null;
+            List<Assignment> assignmentsForPosition = assignmentService.getAssignmentsForPosition(Long.valueOf(currentTask.getAssignee()), new Date());
+            for(Assignment ass:assignmentsForPosition)
+            {
+                if(ass.getPrimary()==true)
+                {
+                    assignment=ass;
+                    break;
+                } else
+                {
+                    assignment=ass;
+                }
+            }
+            if(assignment!=null)
+                employee = assignment .getEmployee();
+
+            if(employee!=null)
+                return employee .getName();
             else
-                voucherState = paymentHeader.getCurrentTask();
-            if (voucherState == null)
-                return dash;
-            else if (voucherState.getStatus().equals("END"))
-                return dash;
-            else
-                return getUserNameForPosition(voucherState.getOwnerPosition().getId().intValue());
+                return "--";
+
         }
         else
             return dash;
+
     }
 
     private String getUserNameForPosition(final Integer posId) {

@@ -62,6 +62,8 @@ import java.util.List;
 public class CustomizedWorkFlowService {
 
 	private static final String DESGQUERY = "getDesignationForListOfDesgNames";
+	
+	
 	@Autowired
 	@Qualifier("entityQueryService")
 	private PersistenceService entityQueryService;
@@ -71,14 +73,21 @@ public class CustomizedWorkFlowService {
 	private WorkflowService<? extends StateAware> workflowService;
 
 	public List<Designation> getNextDesignations(final String type, final String department, final BigDecimal businessRule, final String additionalRule, final String currentState, final String pendingAction, final Date date) {
-
+	    List<String> designationListStr = Collections.EMPTY_LIST;
 		final WorkFlowMatrix wfMatrix = this.workflowService.getWfMatrix(type, department, businessRule, additionalRule, currentState, pendingAction, date);
 		final List<String> designationNames = new ArrayList<String>();
 		if (wfMatrix != null && wfMatrix.getNextDesignation() != null) {
 			final List<String> tempDesignationName = Arrays.asList(wfMatrix.getNextDesignation().split(","));
 			for (final String desgName : tempDesignationName) {
 				if (desgName != null && !"".equals(desgName.trim())) {
+				    if(desgName.equals("HOD"))
+				    {
+				        designationNames.addAll(entityQueryService.findAllByNamedQuery("HODDesginations", department,new Date(),new Date()));
+				        
+				    }else
+				    {
 					designationNames.add(desgName.toUpperCase());
+				    }
 				}
 			}
 		}

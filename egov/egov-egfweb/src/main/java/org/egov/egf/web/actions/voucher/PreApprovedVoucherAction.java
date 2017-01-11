@@ -581,7 +581,7 @@ public class PreApprovedVoucherAction extends BaseWorkFlowAction {
         methodName = "update";
         try {
             voucherHeader = (CVoucherHeader) voucherService.findById(Long.parseLong(parameters.get(VHID)[0]), false);
-            journalVoucherActionHelper.transitionWorkFlow(voucherHeader, workflowBean);   
+            voucherHeader=  journalVoucherActionHelper.transitionWorkFlow(voucherHeader, workflowBean);   
             voucherService.persist(voucherHeader);
           
             type = billsService.getBillTypeforVoucher(voucherHeader);

@@ -379,9 +379,9 @@ public class BudgetProposalAction extends BaseWorkFlowAction {
         if (LOGGER.isInfoEnabled())
             LOGGER.info("Starting budgetDetailApprove()..............");
 
-        final String query = " from BudgetDetail bd where bd.budget=? and (state.value='END' or state.ownerPosition=?) and bd.function="
+        final String query = " from BudgetDetail bd where bd.budget=?  and bd.function="
                 + budgetDetail.getFunction().getId() + "  order by bd.function.name,bd.budgetGroup.name";
-        savedbudgetDetailList = budgetDetailService.findAllBy(query, topBudget, getPosition());
+        savedbudgetDetailList = budgetDetailService.findAllBy(query, topBudget);
 
         if (!savedbudgetDetailList.isEmpty()) {
             populateMajorCodewiseData();
@@ -916,10 +916,7 @@ public class BudgetProposalAction extends BaseWorkFlowAction {
     }
 
     protected void populateWorkflowBean() {
-      /*  workflowBean.setApproverPositionId(approverPositionId);
-        workflowBean.setApproverComments(approverComments);
-        workflowBean.setWorkFlowAction(actionName);
-        workflowBean.setCurrentState(currentState);*/
+      
     }
 
     public String modifyList() {

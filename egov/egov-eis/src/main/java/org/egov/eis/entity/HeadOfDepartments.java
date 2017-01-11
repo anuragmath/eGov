@@ -49,6 +49,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQuery;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
@@ -57,6 +58,8 @@ import static org.egov.eis.entity.HeadOfDepartments.SEQ_HOD;
 @Entity
 @Table(name = "egeis_employee_hod")
 @SequenceGenerator(name = SEQ_HOD, sequenceName = SEQ_HOD, allocationSize = 1)
+@NamedQuery(name="HODDesginations" ,query="select upper(A.designation.name) from Assignment A, HeadOfDepartments hod where hod.hod.name=? and A.id = hod.assignment.id "
+                   + " and  A.fromDate<=? and A.toDate>=? order by A.primary, A.toDate desc")
 public class HeadOfDepartments extends AbstractAuditable {
 
     public static final String SEQ_HOD = "SEQ_EGEIS_EMPLOYEE_HOD";

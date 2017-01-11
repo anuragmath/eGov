@@ -342,6 +342,7 @@ public interface FinancialConstants {
     public static final String BUDGETDETAIL = "BUDGETDETAIL";
     public static final String BUDGETDETAIL_CREATED_STATUS = "Created";
     public static final String BUDGETDETAIL_VERIFIED_STATUS = "VERIFIED";
+    public static final String BUDGETDETAIL_CANCELLED_STATUS = "cancelled";
     public static final String WORKFLOWTYPE_EXPENSE_BILL_DISPLAYNAME = "Expense Bill";
     public static final String WORKFLOWTYPE_VOUCHER_DISPLAYNAME = "Voucher";
 
@@ -361,5 +362,6 @@ public interface FinancialConstants {
     public static final String VOUCHER_TYPE_CONTINGENT = "contingentjv";
     public static final String VOUCHER_TYPE_FIXEDASSET = "fixedassetjv";
     public static final String VOUCHER_TYPE_PENSION = "pensionjv";
+   
 
 }

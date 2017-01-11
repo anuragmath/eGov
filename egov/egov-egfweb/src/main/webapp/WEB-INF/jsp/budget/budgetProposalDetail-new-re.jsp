@@ -89,11 +89,6 @@
 			//bootbox.alert('Financial yr --- '+document.getElementById("budgetDetail_budget").value+' ----- '+document.getElementById("financialYear").value);
 	 }
     
-	function validateWorkFlowApprover(name,errorDivId) {
-		document.getElementById("workFlowAction").value=name; 
-	  validate();
-	}
-		    
      function getActuals(){
 		  if(validateSearch())
 		 {	
@@ -109,13 +104,9 @@
     }
      
 	function save(){
-		document.forms[0].action = "${pageContext.request.contextPath}/budget/budgetProposalDetail-createRe.action";
-		document.forms[0].submit();
+		
     }
-	function forward(){
-		document.forms[0].action = "${pageContext.request.contextPath}/budget/budgetProposalDetail-createReAndForward.action";
-		document.forms[0].submit();
-	}
+	 
 		    
 	var elementId = null;
 	function showDocumentManager(obj){
@@ -215,25 +206,22 @@
 	document.budgetDetailForm.submit();
 	return true;
 	}
-	function validateForApproval()
+	 
+	
+	function onSubmit()
 	{
-
-	/*var con=confirm('<s:text name="budgetdetail.alert.sending.entitre.budget"/>');
-    if(con==false)
-	return false;*/
-    	if(null != document.getElementById("approverUserId") && document.getElementById("approverUserId").value == -1){
-			bootbox.alert("Please select User");
-			return false;
-		}
-	var check=validate();
+		console.log("calling validation");
+		
+		var check=validate();
     	if(check==true)
 		{
-			forward();
+    		document.forms[0].action = "${pageContext.request.contextPath}/budget/budgetProposalDetail-createRE.action";
+    		document.forms[0].submit();
 	 	}else
 	 	{
 		 return false;
 		}
-				
+		
 	}
 
 	function validateSearch()
@@ -387,61 +375,17 @@
 								</s:if>
 							</script> <br /> <br /> 
 						<s:hidden name="financialYear.id" id="hidden_year" />
-                       <%--  <s:hidden name="budget.id" id="hidden_budget" /> --%>
                        <%--  <s:hidden name="function.id" id="hidden_function"/> --%>
                         
                         
 						<div id="savedDataGrid"></div> <script>
-								document.getElementById('hidden_budget').value = '<s:property value="budgetDetail.budget.id"/>'
+								 
 								</script>
 					</span>
 				</div>
-<%-- <%@ include file='../workflow/commonWorkflowMatrix.jsp'%>
-				<%@ include file='../workflow/commonWorkflowMatrix-button.jsp'%> --%>
-				<%-- <div class="tabbertab">
-					<h2>Approval Details</h2>
-					<span> <!--  <input type="hidden" name="scriptName"
-						id="scriptName" value="BudgetDetail.nextDesg" />  -->
-						   <%@include
-							file="../voucher/workflowApproval.jsp"%>   
-							 <%@ include file='../workflow/commonWorkflowMatrix.jsp'%>
-				<%@ include file='../workflow/commonWorkflowMatrix-button.jsp'%> 		
-					</span>
-				</div> --%>
-				<!-- Individual tab -->
-			</div>
-		</div>
-		<div class="buttonbottom"
-			style="padding-bottom: 10px; position: relative">
-			<s:hidden id="workFlowAction" name="workFlowAction" />
-			<s:hidden name="actionName" value="forward" />
-			<table style="width: 100%; text-align: center;">
-		<tr>
-			<td><s:iterator value="%{getValidActions()}" var="validAction">
-					<s:if test="%{validAction!=''}">
-						<s:submit type="submit" cssClass="buttonsubmit"
-							value="%{validAction}" id="%{validAction}" name="%{validAction}"
-							onclick="return validateWorkFlowApprover('%{validAction}','jsValidationErrors');" />
-					</s:if>
-				</s:iterator> <input type="button" name="button2" id="button2" value="Close"
-				class="button" onclick="window.close();" /></td>
-		</tr>
-	</table>
-			<%-- <input type="submit" value="Save" id="budgetDetail__createRe"
-				name="method:createRe" onClick="javascript: return validate();"
-				class="buttonsubmit" /> 
-				<input type="submit" value="Forward"
-				id="budgetDetail__createReAndForward"
-				name="method:createReAndForward"
-				onClick="javascript: return validateForApproval();"
-				class="buttonsubmit" />
-			<!-- <input type="submit" class="buttonsubmit" value="Upload Document" id="budgetDocUploadButton" onclick="showDocumentManager(this);return false;" /> -->
-			<s:submit value="Close" onclick="javascript: self.close()"
-				cssClass="button" /> --%>
-		</div>
-
-
-	</s:form>
+ 				<%@ include file='../workflow/commonworkflow.jsp'%>
+				<%@ include file='../workflow/commonworkflow-button.jsp'%> - 
+				</s:form>
 
 </body>
 </html>

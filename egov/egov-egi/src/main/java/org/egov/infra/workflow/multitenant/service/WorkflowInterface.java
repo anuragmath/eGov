@@ -13,5 +13,6 @@ public interface WorkflowInterface {
      ProcessInstance update(String jurisdiction,ProcessInstance processInstance);
      Task update(String jurisdiction,Task task);
      List<Task> getHistoryDetail(String workflowId);
+     
      //complete it first
 }

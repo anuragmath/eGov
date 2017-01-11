@@ -99,6 +99,9 @@ import org.egov.model.budget.BudgetGroup;
 import org.egov.model.budget.BudgetUpload;
 import org.egov.model.repository.BudgetDetailRepository;
 import org.egov.infra.workflow.multitenant.model.WorkflowBean;
+import org.egov.infra.workflow.multitenant.model.WorkflowConstants;
+import org.egov.infra.workflow.multitenant.model.WorkflowEntity;
+import org.egov.infra.workflow.multitenant.service.BaseWorkFlow;
 import org.egov.pims.commons.Designation;
 import org.egov.pims.commons.Position;
 import org.egov.pims.model.PersonalInformation;
@@ -180,6 +183,8 @@ public class BudgetDetailService extends PersistenceService<BudgetDetail, Long> 
     private static final Logger LOGGER = Logger.getLogger(BudgetDetailService.class);
     private static final String BUDGET_STATES_INSERT = "insert into eg_wf_states (ID,TYPE,VALUE,CREATEDBY,CREATEDDATE,LASTMODIFIEDDATE,LASTMODIFIEDBY,DATEINFO,OWNER_POS,STATUS,VERSION) values (:stateId,'Budget','NEW',1,current_date,current_date,1,current_date,1,1,0)";
     private static final String BUDGETDETAIL_STATES_INSERT = "insert into eg_wf_states (ID,TYPE,VALUE,CREATEDBY,CREATEDDATE,LASTMODIFIEDDATE,LASTMODIFIEDBY,DATEINFO,OWNER_POS,STATUS,VERSION) values (:stateId,'BudgetDetail','NEW',1,current_date,current_date,1,current_date,1,1,0)";
+    @Autowired
+    private BaseWorkFlow baseWorkFlow;
 
     public Session getCurrentSession() {
         return entityManager.unwrap(Session.class);
@@ -1005,14 +1010,14 @@ public class BudgetDetailService extends PersistenceService<BudgetDetail, Long> 
         if (function != null)
             functionCondition = " AND bd.function = " + function.getId();
         query = query
-                .append("SELECT cao.majorcode, SUM(bd.anticipatory_amount) as anticipatory_amount, SUM(bd.originalamount) as originalamount, SUM(bd.approvedamount) as approvedamount FROM egf_budgetdetail bd, egf_budgetgroup bg, egf_budget b, chartofaccounts cao, financialyear f, eg_wf_states wf"
+                .append("SELECT cao.majorcode, SUM(bd.anticipatory_amount) as anticipatory_amount, SUM(bd.originalamount) as originalamount, SUM(bd.approvedamount) as approvedamount "
+                        + "FROM egf_budgetdetail bd, egf_budgetgroup bg, egf_budget b, chartofaccounts cao, financialyear f"
                         + " WHERE bd.budget =b.id AND f.id =" + topBudget.getFinancialYear().getId()
                         + " AND b.financialyearid=" + topBudget.getFinancialYear().getId()
                         + " AND b.MATERIALIZEDPATH LIKE '" + topBudget.getMaterializedPath()
                         + "%' AND bd.budgetgroup =bg.id  AND cao.id =bg.mincode AND cao.id =bg.maxcode AND bg.majorcode IS NULL AND bd.executing_department = "
                         + budgetDetail.getExecutingDepartment().getId() + functionCondition
-                        + " AND (wf.value='END' OR wf.owner_pos=" + pos.getId()
-                        + ") AND bd.state_id = wf.id GROUP BY cao.majorcode");
+                        +" GROUP BY cao.majorcode");
 
         final List<Object[]> result = getSession().createSQLQuery(query.toString()).list();
         if (LOGGER.isInfoEnabled())
@@ -2204,8 +2209,10 @@ public class BudgetDetailService extends PersistenceService<BudgetDetail, Long> 
     }
 
     @Transactional
-    public BudgetDetail transitionWorkFlow(final BudgetDetail budgetDetail, final WorkflowBean workflowBean) {
-        
+    public BudgetDetail transitionWorkFlow(BudgetDetail budgetDetail, final WorkflowBean workflowBean, EgwStatus status) {
+        budgetDetail= (BudgetDetail)baseWorkFlow.transitionWorkFlow(budgetDetail, workflowBean);
+        if(status!=null)
+            budgetDetail.setStatus(status);
         return budgetDetail;
     }
 

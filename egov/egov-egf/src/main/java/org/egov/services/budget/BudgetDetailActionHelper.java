@@ -39,6 +39,11 @@
  */
 package org.egov.services.budget;
 
+import static org.egov.utils.FinancialConstants.BUDGETDETAIL;
+import static org.egov.utils.FinancialConstants.BUDGETDETAIL_CANCELLED_STATUS;
+import static org.egov.utils.FinancialConstants.BUDGETDETAIL_CREATED_STATUS;
+import static org.egov.utils.FinancialConstants.BUDGETDETAIL_VERIFIED_STATUS;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +63,7 @@ import org.egov.model.budget.BudgetDetail;
 import org.egov.model.budget.BudgetProposalBean;
 import org.egov.model.service.BudgetDefinitionService;
 import org.egov.infra.workflow.multitenant.model.WorkflowBean;
+import org.egov.infra.workflow.multitenant.model.WorkflowConstants;
 import org.egov.pims.commons.Position;
 import org.egov.utils.FinancialConstants;
 import org.hibernate.Query;
@@ -92,13 +98,17 @@ public class BudgetDetailActionHelper {
     @Transactional
     public void create(final BudgetDetailHelperBean parameterObject) {
 
+        Budget budget=null;
+        if(parameterObject.budgetDetail.getBudget()!=null && parameterObject.budgetDetail.getBudget().getId()!=null)
+            budget=budgetDefinitionService.findOne(parameterObject.budgetDetail.getBudget().getId());
         if (!parameterObject.addNewDetails)
-            deleteExisting(parameterObject.budgetDetail.getBudget(), parameterObject.searchFunctionId,
+            deleteExisting(budget, parameterObject.searchFunctionId,
                     parameterObject.budgetGroupId);
-        final Position pos = positionMasterService.getPositionById(parameterObject.workflowBean.getApproverPositionId());
-        saveBudgetDetails(true, parameterObject.budgetDetail.getBudget(), parameterObject.budgetDetailList,
-                parameterObject.beAmounts, parameterObject.egwStatus, parameterObject.workflowBean,
-                pos);
+      
+       // final Position pos = positionMasterService.getPositionById(parameterObject.workflowBean.getApproverPositionId());
+        saveBudgetDetails(true, budget, parameterObject.budgetDetailList,
+                parameterObject.beAmounts, parameterObject.egwStatus, parameterObject.workflowBean
+                );
          
 
         budgetDefinitionService.update(parameterObject.budgetDetail.getBudget());
@@ -107,7 +117,7 @@ public class BudgetDetailActionHelper {
 
     public void saveBudgetDetails(final Boolean addNewDetails, final Budget budget,
             final List<BudgetDetail> budgetDetailList, final List<BigDecimal> beAmounts, final EgwStatus egwStatus,
-            final WorkflowBean workflowBean, final Position owner) {
+            final WorkflowBean workflowBean) {
 
         int index = 0;
         Budget refBudget;
@@ -117,16 +127,34 @@ public class BudgetDetailActionHelper {
 
         int i = 0;
         BudgetDetail beNextYear;
+        EgwStatus status=null;
+        
+        switch(workflowBean.getWorkflowAction().toLowerCase())
+        {
+        case WorkflowConstants.ACTION_CREATE:
+            status= egwStatusHibernateDAO.getStatusByModuleAndCode(BUDGETDETAIL,BUDGETDETAIL_CREATED_STATUS);
+            break;
+            
+        case WorkflowConstants.ACTION_APPROVE:
+            status= egwStatusHibernateDAO.getStatusByModuleAndCode(BUDGETDETAIL,BUDGETDETAIL_VERIFIED_STATUS);
+            break;
+            
+        case WorkflowConstants.ACTION_CANCEL:
+            status= egwStatusHibernateDAO.getStatusByModuleAndCode(BUDGETDETAIL,BUDGETDETAIL_CANCELLED_STATUS);
+            break;
+            
+        }
+        
+        
         for (final BudgetDetail detail : budgetDetailList) {
             if (detail != null)
                 detail.setId(null);
             BudgetDetail reCurrentYear = budgetDetailService.setRelatedEntitesOn(detail);
             reCurrentYear.setUniqueNo(budgetDetailService.generateUniqueNo(reCurrentYear));
+            reCurrentYear.setBudget(budget);
             budgetDetailService.applyAuditing(reCurrentYear);
-            reCurrentYear = budgetDetailService.transitionWorkFlow(reCurrentYear, workflowBean);
+            reCurrentYear = budgetDetailService.transitionWorkFlow(reCurrentYear, workflowBean,status);
             
-            budgetDetailService.persist(reCurrentYear);
-
             beNextYear = new BudgetDetail();
             beNextYear.copyFrom(detail);
             beNextYear.setBudget(refBudget);
@@ -135,11 +163,9 @@ public class BudgetDetailActionHelper {
             beNextYear.setAnticipatoryAmount(reCurrentYear.getAnticipatoryAmount());
             beNextYear = budgetDetailService.setRelatedEntitesOn(beNextYear);
             beNextYear.setUniqueNo(budgetDetailService.generateUniqueNo(beNextYear));
-            if (workflowBean.getWorkflowAction().equalsIgnoreCase(FinancialConstants.BUTTONSAVE))
-                beNextYear.setStatus(egwStatusHibernateDAO.getStatusByModuleAndCode(FinancialConstants.BUDGETDETAIL,
-                        FinancialConstants.WORKFLOW_STATE_NEW));
-            else
-                beNextYear.setStatus(egwStatus);
+            beNextYear.setStatus(status);
+            //next year BE dont have workflow it comes with RE
+           
             budgetDetailService.applyAuditing(beNextYear);
             budgetDetailService.persist(beNextYear);
 
@@ -190,7 +216,16 @@ public class BudgetDetailActionHelper {
     @Transactional
     public void update(final List<BudgetProposalBean> bpBeanList, final WorkflowBean workflowBean) {
         BudgetDetail bd;
+        
+        
         BudgetDetail be;
+        EgwStatus status=null;
+        
+        if (workflowBean.getWorkflowAction().contains("Verify"))
+                status=egwStatusHibernateDAO.getStatusByModuleAndCode(BUDGETDETAIL,BUDGETDETAIL_VERIFIED_STATUS);
+           else
+               status=egwStatusHibernateDAO.getStatusByModuleAndCode(BUDGETDETAIL,BUDGETDETAIL_CREATED_STATUS);
+
         for (final BudgetProposalBean bpBean : bpBeanList) {
             if (bpBean == null || bpBean.getId() == null)
                 continue;
@@ -200,15 +235,8 @@ public class BudgetDetailActionHelper {
             be.setOriginalAmount(bpBean.getProposedBE());
             if (bpBean.getDocumentNumber() != null)
                 bd.setDocumentNumber(bpBean.getDocumentNumber());
-
-            bd = budgetDetailService.transitionWorkFlow(bd, workflowBean);
-
-            if (workflowBean.getWorkflowAction().contains("Verify"))
-                be.setStatus(egwStatusHibernateDAO.getStatusByModuleAndCode(FinancialConstants.BUDGETDETAIL,
-                        FinancialConstants.BUDGETDETAIL_VERIFIED_STATUS));
-            else
-                be.setStatus(egwStatusHibernateDAO.getStatusByModuleAndCode(FinancialConstants.BUDGETDETAIL,
-                        FinancialConstants.BUDGETDETAIL_CREATED_STATUS));
+            
+            bd = budgetDetailService.transitionWorkFlow(bd, workflowBean,status);
             budgetDetailService.update(bd);
             budgetDetailService.update(be);
         }

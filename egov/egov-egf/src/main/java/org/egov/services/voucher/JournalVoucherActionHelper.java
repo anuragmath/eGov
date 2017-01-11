@@ -175,7 +175,7 @@ public class JournalVoucherActionHelper extends BaseWorkFlow {
                 voucherHeader.setStatus(FinancialConstants.PREAPPROVEDVOUCHERSTATUS);
 
             }
-            voucherHeader=(CVoucherHeader)    transitinWorkflow(voucherHeader,workflowBean);
+            voucherHeader=(CVoucherHeader)    transitionWorkFlow(voucherHeader,workflowBean);
             voucherService.persist(voucherHeader);
         } catch (final ValidationException e) {
 
@@ -193,8 +193,9 @@ public class JournalVoucherActionHelper extends BaseWorkFlow {
     
     
 
+     
     @Transactional 
-    private  CVoucherHeader transitinWorkflow(CVoucherHeader vh,WorkflowBean workflowBean)
+    public  CVoucherHeader transitionWorkFlow(CVoucherHeader vh,WorkflowBean workflowBean)
     {
         vh = (CVoucherHeader)baseWorkFlow.transitionWorkFlow(vh, workflowBean);
         switch(workflowBean.getWorkflowAction().toLowerCase())   

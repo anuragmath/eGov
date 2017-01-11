@@ -39,6 +39,12 @@
  */
 package org.egov.infra.workflow.multitenant.service;
 
+import static org.egov.infra.workflow.multitenant.model.WorkflowConstants.OBJ_WORKFLOWBEAN;
+import static org.egov.infra.workflow.multitenant.model.WorkflowConstants.STATUS_NEW;
+import static org.egov.infra.workflow.multitenant.model.WorkflowConstants.VAR_AMOUNTRULE;
+import static org.egov.infra.workflow.multitenant.model.WorkflowConstants.VAR_APPROVERDESIGNATIONNAME;
+import static org.egov.infra.workflow.multitenant.model.WorkflowConstants.VAR_APPROVERNAME;
+
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +70,8 @@ public  class BaseWorkFlow {
 	 
     
     
+   
+
     @Autowired
     ApplicationContext applicationContext;
     
@@ -82,8 +90,8 @@ public  class BaseWorkFlow {
           workflowBean.setApproverPositionId(Long.valueOf(pi.getAssignee()));
           if(workflowBean.getWorkflowAction().equalsIgnoreCase(WorkflowConstants.ACTION_REJECT))
           {
-              workflowBean.setApproverDesignationName(pi.getAttributes().get("approverDesignationName").getCode()); 
-              workflowBean.setApproverName(pi.getAttributes().get("approverName").getCode()); 
+              workflowBean.setApproverDesignationName(pi.getAttributes().get(VAR_APPROVERDESIGNATIONNAME).getCode()); 
+              workflowBean.setApproverName(pi.getAttributes().get(VAR_APPROVERNAME).getCode()); 
               
           }
           workflowBean.setAttributes(pi.getAttributes());
@@ -101,8 +109,8 @@ public  class BaseWorkFlow {
         workflowBean.setApproverPositionId(Long.valueOf(task.getAssignee()));
         if(workflowBean.getWorkflowAction().equalsIgnoreCase(WorkflowConstants.ACTION_REJECT))
         {
-            workflowBean.setApproverDesignationName(task.getAttributes().get("approverDesignationName").getCode()); 
-            workflowBean.setApproverName(task.getAttributes().get("approverName").getCode()); 
+            workflowBean.setApproverDesignationName(task.getAttributes().get(VAR_APPROVERDESIGNATIONNAME).getCode()); 
+            workflowBean.setApproverName(task.getAttributes().get(VAR_APPROVERNAME).getCode()); 
             
         }
         workflowBean.setAttributes(task.getAttributes());
@@ -151,7 +159,7 @@ public  class BaseWorkFlow {
         workflowBean.setCurrentState(pi.getStatus());
         if( workflowBean.getCurrentState()==null ||workflowBean.getCurrentState().isEmpty())
         {
-            workflowBean.setCurrentState("NEW");
+            workflowBean.setCurrentState(STATUS_NEW);
         }
         if(pi.getAssignee()!=null)
         workflowBean.setCurrentPositionId(Long.valueOf(pi.getAssignee()));
@@ -177,7 +185,7 @@ public  class BaseWorkFlow {
         }
         if(prepareModel!=null)
             
-        prepareModel.addAttribute("workflowBean", workflowBean);
+        prepareModel.addAttribute(WorkflowConstants.OBJ_WORKFLOWBEAN, workflowBean);
         return workflowBean;
     }
     
@@ -187,9 +195,13 @@ public  class BaseWorkFlow {
 
     public WorkflowBean populateWorkflowBean(HttpServletRequest request) {
         WorkflowBean workflowBean=new WorkflowBean();
-        String amountRule = request.getParameter("workflowBean.amountRule");
+        String amountRule = request.getParameter(OBJ_WORKFLOWBEAN+"."+VAR_AMOUNTRULE);
         if(amountRule!=null && !amountRule.isEmpty())
             workflowBean.setAmountRule(BigDecimal.valueOf(Long.valueOf(amountRule)));
+        
+        String additionalRule = request.getParameter("workflowBean.additionalRule");
+        if(additionalRule!=null && !additionalRule.isEmpty())
+            workflowBean.setAdditionalRule(additionalRule);
         
         String appDept = request.getParameter("workflowBean.approverDepartmentId");
         if(appDept!=null && !appDept.isEmpty())
@@ -216,7 +228,7 @@ public  class BaseWorkFlow {
         if(request.getParameter("workflowBean.approverName")!=null)
             workflowBean.setApproverName(request.getParameter("workflowBean.approverName"));
         if(request.getParameter("workflowBean.businessKey")!=null)
-        workflowBean.setBusinessKey(request.getParameter("workflowBean.businessKey"));
+           workflowBean.setBusinessKey(request.getParameter("workflowBean.businessKey"));
         
         if(request.getParameter("workflowBean.workflowId")!=null)
             workflowBean.setWorkflowId(request.getParameter("workflowBean.workflowId"));

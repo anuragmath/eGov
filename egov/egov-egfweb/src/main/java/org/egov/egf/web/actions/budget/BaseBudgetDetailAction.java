@@ -85,6 +85,7 @@ import org.egov.model.budget.Budget;
 import org.egov.model.budget.BudgetDetail;
 import org.egov.model.budget.BudgetGroup;
 import org.egov.infra.workflow.multitenant.model.WorkflowBean;
+import org.egov.infra.workflow.multitenant.model.WorkflowConstants;
 import org.egov.pims.commons.Position;
 import org.egov.services.budget.BudgetDetailActionHelper;
 import org.egov.services.budget.BudgetDetailHelperBean;
@@ -100,7 +101,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import com.opensymphony.xwork2.ActionContext;
 import com.opensymphony.xwork2.util.ValueStack;
 
-public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
+public  class BaseBudgetDetailAction extends BaseWorkFlowAction {
     private static final String EGF_BUDGET_GROUP = "egf-budgetGroup";
     private static final String EGI_FUNCTIONARY = "egi-functionary";
     private static final String EGI_FUNCTION = "egi-function";
@@ -137,19 +138,19 @@ public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
     protected Date asOnDate;
 
     @Autowired
-    private EisCommonService eisCommonService;
+    protected EisCommonService eisCommonService;
     protected BudgetDetailHelper budgetDetailHelper;
     protected boolean addNewDetails = false;
 
     @Autowired
-    private BudgetDetailActionHelper budgetDetailActionHelper;
+    protected BudgetDetailActionHelper budgetDetailActionHelper;
 
     private static final String NEWRE = "new-re";
-    private static final String BUDGETLIST = "budgetList";
-    private static final String RE = "RE";
-    private static final String SAVE = "budgetdetail.save";
-    private static final String BUDGETRE = "budgetDetail.re.amount";
-    private static final String BUDGETBE = "budgetDetail.be.amount";
+    protected static final String BUDGETLIST = "budgetList";
+    protected static final String RE = "RE";
+    protected static final String SAVE = "budgetdetail.save";
+    protected static final String BUDGETRE = "budgetDetail.re.amount";
+    protected static final String BUDGETBE = "budgetDetail.be.amount";
     @Autowired
     @Qualifier("persistenceService")
     private PersistenceService persistenceService;
@@ -171,10 +172,10 @@ public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
     private EgovMasterDataCaching masterDataCache;
 
     protected boolean re = false;
-    private boolean showMessage = false;
+    protected boolean showMessage = false;
     protected List<BigDecimal> beAmounts = new ArrayList<BigDecimal>();
-    private Budget referenceBudget;
-    private CFinancialYear financialYear;
+    protected Budget referenceBudget;
+    protected CFinancialYear financialYear;
     protected List<Budget> budgetList = new ArrayList<Budget>();
     protected boolean showRe;
     public Long budgetDocumentNumber;
@@ -182,59 +183,23 @@ public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
     protected Long searchfunctionid;
     protected Long searchbudgetGroupid;
     @Autowired
-    private EgwStatusHibernateDAO egwStatusHibernateDAO;
+    protected EgwStatusHibernateDAO egwStatusHibernateDAO;
 
     private static Logger LOGGER = Logger.getLogger(BaseBudgetDetailAction.class);
 
-    public abstract void populateSavedbudgetDetailListFor(Budget budget);
-
-    public abstract void populateSavedbudgetDetailListForDetail(BudgetDetail bd);
-
-    protected abstract void saveAndStartWorkFlow(BudgetDetail detail, WorkflowBean workflowBean);
-
-    protected abstract void saveAndStartWorkFlowForRe(BudgetDetail detail, int index, CFinancialYear finYear,
-            Budget refBudget, WorkflowBean workflowBean);
-
-    protected abstract void approve();
 
     @Override
     public String execute() {
         return NEW;
     }
 
-    @ValidationErrorPage(value = NEWRE)
-    @Action(value = "/budget/budgetProposalDetail-createRE")
-    public String createRe() {
-        showRe = true;
-        try {
-            getActionMessages().clear();
-            validateMandatoryFields();
-            budgetDetailHelper.removeEmptyBudgetDetails(budgetDetailList);
-
-            budgetDetail = budgetDetailList.get(0);
-            validateAmounts(budgetDetailList);
-            Assignment assignment = new Assignment();
-            
-
-            showMessage = true;
-          
-            dropdownData.put(BUDGETLIST, Collections.emptyList());
-            budgetDetail = new BudgetDetail();
-            budgetDetail.setExecutingDepartment(null);
-        } catch (final ValidationException e) {
-            loadBudgets(RE);
-            dropdownData.put(BUDGETLIST, budgetList);
-            referenceBudget = budgetService.getReferenceBudgetFor(budgetDetail.getBudget());
-            throw e;
-        }
-        return NEWRE;
-    }
+  
 
     /**
      * @param budget deletes the existing selected budgets from db
      */
 
-    private void validateAmounts(final List<BudgetDetail> detailList) {
+    protected void validateAmounts(final List<BudgetDetail> detailList) {
         for (int i = 0; i < detailList.size(); i++) {
             if (beAmounts.get(i) == null)
                 throw new ValidationException(Arrays.asList(new ValidationError(BUDGETRE, BUDGETRE)));
@@ -262,6 +227,34 @@ public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
         }
     }
 
+    public String generateMessage(Budget budget, WorkflowBean workflowBean) {
+        String message="";
+        switch(workflowBean.getWorkflowAction().toLowerCase())   
+        {
+        case  WorkflowConstants.ACTION_APPROVE :
+            message=getText("budget.approved.success",new String[] {budget.getName()});
+            break;
+        case  WorkflowConstants.ACTION_REJECT :
+            message=getText("budget.reject", new String[] {budget.getName(),workflowBean.getApproverName(),workflowBean.getApproverDesignationName()});
+            break;   
+        case  WorkflowConstants.ACTION_FORWARD :
+            message=getText("budget.create.success",
+                    new String[] {budget.getName(),workflowBean.getApproverName(),workflowBean.getApproverDesignationName()});  
+
+            break;    
+        case  WorkflowConstants.ACTION_CANCEL :
+            message=getText("budget.cancel",
+                    new String[] {budget.getName()});
+            break; 
+        case  WorkflowConstants.ACTION_SAVE :
+            message=getText("budget.saved.success",
+                    new String[] {budget.getName()});
+            break;   
+
+        }
+        return message;
+    }
+    
     private void setRelatedValues(final BudgetDetail detail) {
         if (detail.getExecutingDepartment() != null && detail.getExecutingDepartment().getId() == 0)
             detail.setExecutingDepartment(null);
@@ -293,7 +286,7 @@ public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
         return mandatoryFields.contains(field);
     }
 
-    private void setAsOnDateOnSelectedBudget() {
+    protected void setAsOnDateOnSelectedBudget() {
         if (budgetDetail.getBudget() != null && budgetDetail.getBudget().getId() != null) {
             final Budget selectedBudget = (Budget) getPersistenceService().find("from Budget where id=?",
                     budgetDetail.getBudget().getId());
@@ -490,7 +483,7 @@ public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
                 dropdownData.put(BUDGETLIST, Collections.emptyList());
         } else
             dropdownData.put(BUDGETLIST, persistenceService.findAllBy(
-                    "from Budget where id not in (select parent from Budget where parent is not null) and isactivebudget = true and state.type='Budget' and (state.value='NEW' or lower(state.value) like lower('Forwarded by SMADMIN%')) order by name"));
+                    "from Budget where id not in (select parent from Budget where parent is not null) and isactivebudget = true and status.description='Approved'  order by name"));
     }
 
     public List<BudgetDetail> getSavedbudgetDetailList() {
@@ -890,6 +883,12 @@ public abstract class BaseBudgetDetailAction extends BaseWorkFlowAction {
 
     public List<Scheme> getSubSchemes() {
         return subSchemes;
+    }
+
+    @Override
+    public Object getModel() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

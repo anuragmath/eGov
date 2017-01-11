@@ -73,6 +73,8 @@ import org.egov.utils.VoucherHelper;
 import org.hibernate.Query;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static org.egov.utils.FinancialConstants.CREATEDVOUCHERSTATUS;
+
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -309,13 +311,13 @@ public class VoucherSearchAction extends BaseFormAction
                         /*
                          * bill state will be null if created from create JV screen and voucher is in end state
                          */
-                        if (billMis.getEgBillregister().getWorkflowId() == null && voucherheader.getCurrentTask().getStatus().contains("END"))
+                        if (billMis.getEgBillregister().getWorkflowId() == null && voucherheader.getStatus().equals(CREATEDVOUCHERSTATUS))
                             ismodifyJv = true;
                         else
                             ismodifyJv = false;
                     }
                     else if (voucherheader.getName().equalsIgnoreCase(FinancialConstants.JOURNALVOUCHER_NAME_GENERAL) &&
-                            voucherheader.getCurrentTask().getStatus().contains("END"))
+                            voucherheader.getStatus().equals(CREATEDVOUCHERSTATUS))
                         ismodifyJv = true;
                 } else
                     ismodifyJv = true;

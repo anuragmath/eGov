@@ -251,6 +251,26 @@ public class WorkflowBean implements Serializable {
         if(this.getApproverPositionId()!=null)  
             pi.setAsignee(this.getApproverPositionId().toString());
         pi.setDescription(this.getWorkflowComments());
+       
+        Attribute attrib;
+        if(additionalRule!=null)
+        {
+        attrib=new Attribute();
+        attrib.setCode(additionalRule);
+        pi.getAttributes().put("additionalRule", attrib);
+        }
+        
+        if(amountRule!=null)
+        {
+        attrib=new Attribute();
+        attrib.setCode(amountRule.toString());
+        pi.getAttributes().put("amountRule", attrib);
+        }
+        
+        
+        
+        
+        
         pi.setAttributes(this.getAttributes()); 
         return pi;     
     }
@@ -283,6 +303,17 @@ public class WorkflowBean implements Serializable {
         this.setCurrentState(processInstance.getStatus());
         if(processInstance.getAssignee()!=null)
             this.setApproverPositionId(Long.valueOf(processInstance.getAssignee()));
+        
+        if(processInstance.getAttributes().get("amountRule")!=null)
+        {
+            this.setAmountRule(BigDecimal.valueOf(Long.valueOf(processInstance.getAttributes().get("amountRule").getCode())));
+        }
+        
+        if(processInstance.getAttributes().get("additionalRule")!=null)
+        {
+            this.setAdditionalRule( processInstance.getAttributes().get("additionalRule").getCode() );
+        }
+         
          
     }
 }
