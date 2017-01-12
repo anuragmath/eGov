@@ -223,14 +223,14 @@ function onLoad(){
 }
 function onSubmit()
 {
-<<<<<<< HEAD
+ 
 	 if(!validateCutOff())
 			return false; 
-=======
+ 
 	var balanceCheckMandatory='<s:text name="payment.mandatory"/>';
 	var balanceCheckWarning='<s:text name="payment.warning"/>';
 	var noBalanceCheck='<s:text name="payment.none"/>';
->>>>>>> refs/remotes/origin/develop
+ 
 	if(validate()){
 		 var myform = jQuery('#remittanceForm');
 		// re-disabled the set of inputs that you previously

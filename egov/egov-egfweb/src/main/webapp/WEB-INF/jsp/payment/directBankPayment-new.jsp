@@ -292,6 +292,59 @@
 	var totalsnotmatchingamount='<s:text name="totals.not.matching.amount"/>';
 	var 	button='<s:property value="button"/>';
 	</script>
+<script type="text/javascript">
+	function onLoadTask_new()
+	{
+		if(button!=null && button!="")
+		{
+			if(document.getElementById("Errors").innerHTML=='')  
+			{
+				bootbox.alert(succesMessage);
+				if(button=="Save_Close")
+					{
+					window.close();
+					}
+				else if(button=="Save_View")
+					{
+							var vhId='<s:property value="voucherHeader.id"/>';
+							document.forms[0].action = "${pageContext.request.contextPath}/voucher/preApprovedVoucher-loadvoucherview.action?vhid="+vhId;
+							return true;
+					}
+				else if(button=="Save_New")
+					{      	
+						document.forms[0].button.value='';
+					    document.forms[0].action = "directBankPayment-newform.action";
+					 	return true;
+					}
+			}
+			
+			
+	 	}else
+	 	{
+	 		
+	 		<s:if test="%{showMode=='nonbillPayment'}">
+				//bootbox.alert('<s:property value="showMode"/>');
+				if(document.getElementById("Errors").innerHTML!='')
+				{
+				document.getElementById('buttondiv').style.display="none";
+				document.getElementById('buttondivdefault').style.display="block";
+				}
+			</s:if>
+	 	}
+	 	
+			
+			if(showMode=='nonbillPayment')
+			{
+			disableForNonBillPayment();	
+			disableYUIAddDeleteButtons(true);
+			}
+			if(document.getElementById('approverDepartment'))
+				document.getElementById('approverDepartment').value = "-1";
+			if (jQuery("#bankBalanceCheck") == null || jQuery("#bankBalanceCheck").val() == "") {
+				 disableForm(); 
+			}
+	}
+</script>
 
 </head>
 <body
@@ -351,75 +404,22 @@
 
 					</br>
 				</table>
-<<<<<<< HEAD
-				<s:hidden id="cutOffDate" name="cutOffDate" />
-				<%@ include file='../workflow/commonworkflow.jsp'%>
-=======
+
 				<s:hidden name="cutOffDate" id="cutOffDate" />
-				<s:hidden name="bankBalanceCheck" id="bankBalanceCheck" value="%{bankBalanceCheck}" />
-				<%@ include file='../payment/commonWorkflowMatrix.jsp'%>
->>>>>>> refs/remotes/origin/develop
+						<%@ include file="../workflow/commonworkflow.jsp"%>
+				<s:hidden name="bankBalanceCheck" id="bankBalanceCheck"
+					value="%{bankBalanceCheck}" />
+<%-- 				<%@ include file='../payment/commonWorkflowMatrix.jsp'%>
+ --%>
 			</div>
 			<div align="center">
-				<%@ include file='../workflow/commonworkflow-button.jsp'%>
+						<%@ include file="../workflow/commonworkflow-button.jsp"%>
 			</div>
 		</s:push>
 		<s:hidden name="showMode" />
 		<s:token />
 	</s:form>
 	<script type="text/javascript">
-function onLoadTask_new()
-{
-	//bootbox.alert(showMode);                                                      
-	if(button!=null && button!="")
-	{
-		if(document.getElementById("Errors").innerHTML=='')  
-		{
-			bootbox.alert(succesMessage);
-			if(button=="Save_Close")
-				{
-				window.close();
-				}
-			else if(button=="Save_View")
-				{
-						var vhId='<s:property value="voucherHeader.id"/>';
-						document.forms[0].action = "${pageContext.request.contextPath}/voucher/preApprovedVoucher-loadvoucherview.action?vhid="+vhId;
-						return true;
-				}
-			else if(button=="Save_New")
-				{      	
-					document.forms[0].button.value='';
-				    document.forms[0].action = "directBankPayment-newform.action";
-				 	return true;
-				}
-		}
-		
-		
- 	}else
- 	{
- 		
- 		<s:if test="%{showMode=='nonbillPayment'}">
-			//bootbox.alert('<s:property value="showMode"/>');
-			if(document.getElementById("Errors").innerHTML!='')
-			{
-			document.getElementById('buttondiv').style.display="none";
-			document.getElementById('buttondivdefault').style.display="block";
-			}
-		</s:if>
- 	}
- 	
-		
-		if(showMode=='nonbillPayment')
-		{
-		disableForNonBillPayment();	
-		disableYUIAddDeleteButtons(true);
-		}
-		if(document.getElementById('approverDepartment'))
-			document.getElementById('approverDepartment').value = "-1";
-		if (jQuery("#bankBalanceCheck") == null || jQuery("#bankBalanceCheck").val() == "") {
-			disableForm();
-		}
-}
 
 function populateAccNum(branch){
 	var fundObj = document.getElementById('fundId');

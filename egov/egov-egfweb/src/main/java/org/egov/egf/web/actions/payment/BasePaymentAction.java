@@ -42,9 +42,6 @@
  */
 package org.egov.egf.web.actions.payment;
 
-import com.exilant.eGov.src.transactions.VoucherTypeForULB;
-import com.opensymphony.xwork2.validator.annotations.Validations;
-
 import java.util.Collections;
 
 import org.apache.log4j.Logger;
@@ -55,13 +52,16 @@ import org.apache.struts2.convention.annotation.Results;
 import org.apache.struts2.interceptor.validation.SkipValidation;
 import org.egov.egf.web.actions.voucher.BaseVoucherAction;
 import org.egov.eis.service.EisCommonService;
+import org.egov.infra.admin.master.entity.AppConfig;
+import org.egov.infra.admin.master.service.AppConfigService;
 import org.egov.infra.admin.master.service.AppConfigValueService;
-import org.egov.infra.workflow.service.SimpleWorkflowService;
 import org.egov.model.advance.EgAdvanceRequisition;
 import org.egov.model.payment.Paymentheader;
 import org.egov.utils.FinancialConstants;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+
+import com.exilant.eGov.src.transactions.VoucherTypeForULB;
+import com.opensymphony.xwork2.validator.annotations.Validations;
 
 /**
  * @author mani
@@ -69,155 +69,173 @@ import org.springframework.beans.factory.annotation.Qualifier;
 @ParentPackage("egov")
 @Validations
 @Results({
-        @Result(name = "billpayment", type = "redirectAction", location = "payment-view", params = { "namespace", "/payment",
-                "paymentid", "${paymentid}"
-        }),
-        @Result(name = "advancepayment", type = "redirectAction", location = "payment-advanceView", params = { "namespace",
-                "/payment", "paymentid", "${paymentid}"
-        }),
-        @Result(name = "directbankpayment", type = "redirectAction", location = "directBankPayment-viewInboxItem", params = {
-                "namespace", "/payment", "paymentid", "${paymentid}"
-        }),
-        @Result(name = "remitRecovery", type = "redirectAction", location = "remitRecovery-viewInboxItem", params = {
-                "namespace", "/deduction", "paymentid", "${paymentid}"
-        }),
-        @Result(name = "contractoradvancepayment", type = "redirectAction", location = "advancePayment-viewInboxItem", params = {
-                "namespace", "/payment", "paymentid", "${paymentid}"
-        })
-})
+		@Result(name = "billpayment", type = "redirectAction", location = "payment-view", params = { "namespace",
+				"/payment", "paymentid", "${paymentid}" }),
+		@Result(name = "advancepayment", type = "redirectAction", location = "payment-advanceView", params = {
+				"namespace", "/payment", "paymentid", "${paymentid}" }),
+		@Result(name = "directbankpayment", type = "redirectAction", location = "directBankPayment-viewInboxItem", params = {
+				"namespace", "/payment", "paymentid", "${paymentid}" }),
+		@Result(name = "remitRecovery", type = "redirectAction", location = "remitRecovery-viewInboxItem", params = {
+				"namespace", "/deduction", "paymentid", "${paymentid}" }),
+		@Result(name = "contractoradvancepayment", type = "redirectAction", location = "advancePayment-viewInboxItem", params = {
+				"namespace", "/payment", "paymentid", "${paymentid}" }) })
 public class BasePaymentAction extends BaseVoucherAction {
-    /**
-     *
-     */
-    private static final long serialVersionUID = 8589393885303282831L;
-    EisCommonService eisCommonService;
-    private static Logger LOGGER = Logger.getLogger(BasePaymentAction.class);
-    
-    @Autowired
-    private VoucherTypeForULB voucherTypeForULB;
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 8589393885303282831L;
+	EisCommonService eisCommonService;
+	private static Logger LOGGER = Logger.getLogger(BasePaymentAction.class);
 
-    public void setEisCommonService(final EisCommonService eisCommonService) {
-        this.eisCommonService = eisCommonService;
-    }
+	@Autowired
+	private VoucherTypeForULB voucherTypeForULB;
 
-    public BasePaymentAction()
-    {
-        super();
-    }
+	public void setEisCommonService(final EisCommonService eisCommonService) {
+		this.eisCommonService = eisCommonService;
+	}
 
-    protected String action = "";
-    protected String paymentid = "";
-    private final String BILLPAYMENT = "billpayment";
-    private final String DIRECTBANKPAYMENT = "directbankpayment";
-    private final String REMITTANCEPAYMENT = "remitRecovery";
-    public static final String ARF_TYPE = "Contractor";
+	public BasePaymentAction() {
+		super();
+	}
 
-    protected static final String ACTIONNAME = "actionname";
-    protected boolean canCheckBalance = false;
+	protected String action = "";
+	protected String paymentid = "";
+	private final String BILLPAYMENT = "billpayment";
+	private final String DIRECTBANKPAYMENT = "directbankpayment";
+	private final String REMITTANCEPAYMENT = "remitRecovery";
+	public static final String ARF_TYPE = "Contractor";
+	private String bankBalanceCheck = "";
 
-    public boolean isCanCheckBalance() {
-        return canCheckBalance;
-    }
+	protected static final String ACTIONNAME = "actionname";
+	protected boolean canCheckBalance = false;
 
-    public void setCanCheckBalance(final boolean canCheckBalance) {
-        this.canCheckBalance = canCheckBalance;
-    }
+	public boolean isCanCheckBalance() {
+		return canCheckBalance;
+	}
 
-    @Autowired
-    protected AppConfigValueService appConfigValuesService;
+	public void setCanCheckBalance(final boolean canCheckBalance) {
+		this.canCheckBalance = canCheckBalance;
+	}
 
-    protected String showMode;
+	@Autowired
+	AppConfigService appConfigService;
 
-    @SkipValidation
-    @Action(value = "/payment/basePayment-viewInboxItems")
-    public String viewInboxItems() {
+	@Autowired
+	protected AppConfigValueService appConfigValuesService;
 
-        if (LOGGER.isDebugEnabled())
-            LOGGER.debug("Starting viewInboxItems..... ");
-        String result = null;
-        final Paymentheader paymentheader = (Paymentheader) persistenceService.find("from Paymentheader where id=?",
-                Long.valueOf(paymentid));
-        
-        getSession().put("paymentid", paymentid);
-        if (paymentheader.getVoucherheader().getName().equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_ADVANCE)) {
-            final EgAdvanceRequisition arf = (EgAdvanceRequisition) persistenceService.find(
-                    "from EgAdvanceRequisition where arftype = ? and egAdvanceReqMises.voucherheader = ?", ARF_TYPE,
-                    paymentheader.getVoucherheader());
-            if (arf != null)
-                result = "contractoradvancepayment";
-            else
-                result = "advancepayment";
-        }
-        else if (paymentheader.getVoucherheader().getName().equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_BILL) ||
-                FinancialConstants.PAYMENTVOUCHER_NAME_SALARY.equalsIgnoreCase(paymentheader.getVoucherheader().getName()) ||
-                FinancialConstants.PAYMENTVOUCHER_NAME_PENSION.equalsIgnoreCase(paymentheader.getVoucherheader().getName()))
-            result = BILLPAYMENT;
-        else if (paymentheader.getVoucherheader().getName().equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_DIRECTBANK))
-            result = DIRECTBANKPAYMENT;
-        else if (paymentheader.getVoucherheader().getName().equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_REMITTANCE))
-            result = REMITTANCEPAYMENT;
-        if (LOGGER.isDebugEnabled())
-            LOGGER.debug("Completed viewInboxItems..... ");
-        return result;
-    }
-    
-    public void prepareNewform() {
-        super.prepareNewform();
-      
-        addDropdownData("bankList", Collections.EMPTY_LIST);
-        addDropdownData("accNumList", Collections.EMPTY_LIST);
+	protected String showMode;
 
-    }
+	@SkipValidation
+	@Action(value = "/payment/basePayment-viewInboxItems")
+	public String viewInboxItems() {
 
+		if (LOGGER.isDebugEnabled())
+			LOGGER.debug("Starting viewInboxItems..... ");
+		String result = null;
+		final Paymentheader paymentheader = (Paymentheader) persistenceService.find("from Paymentheader where id=?",
+				Long.valueOf(paymentid));
 
-    // used only in create
-    public boolean shouldshowVoucherNumber()
-    {
-        String vNumGenMode = "Manual";
-        vNumGenMode = voucherTypeForULB.readVoucherTypes(FinancialConstants.STANDARD_VOUCHER_TYPE_PAYMENT);
-        if (!"Auto".equalsIgnoreCase(vNumGenMode)) {
-            mandatoryFields.add("vouchernumber");
-            return true;
-        } else
-            return false;
-    }
+		getSession().put("paymentid", paymentid);
+		if (paymentheader.getVoucherheader().getName()
+				.equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_ADVANCE)) {
+			final EgAdvanceRequisition arf = (EgAdvanceRequisition) persistenceService.find(
+					"from EgAdvanceRequisition where arftype = ? and egAdvanceReqMises.voucherheader = ?", ARF_TYPE,
+					paymentheader.getVoucherheader());
+			if (arf != null)
+				result = "contractoradvancepayment";
+			else
+				result = "advancepayment";
+		} else if (paymentheader.getVoucherheader().getName()
+				.equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_BILL)
+				|| FinancialConstants.PAYMENTVOUCHER_NAME_SALARY
+						.equalsIgnoreCase(paymentheader.getVoucherheader().getName())
+				|| FinancialConstants.PAYMENTVOUCHER_NAME_PENSION
+						.equalsIgnoreCase(paymentheader.getVoucherheader().getName()))
+			result = BILLPAYMENT;
+		else if (paymentheader.getVoucherheader().getName()
+				.equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_DIRECTBANK))
+			result = DIRECTBANKPAYMENT;
+		else if (paymentheader.getVoucherheader().getName()
+				.equalsIgnoreCase(FinancialConstants.PAYMENTVOUCHER_NAME_REMITTANCE))
+			result = REMITTANCEPAYMENT;
+		if (LOGGER.isDebugEnabled())
+			LOGGER.debug("Completed viewInboxItems..... ");
+		return result;
+	}
 
-  
+	@Override
+	public void prepareNewform() {
+		super.prepareNewform();
 
-    
-    public String getAction() {
-        return action;
-    }
+		addDropdownData("bankList", Collections.EMPTY_LIST);
+		addDropdownData("accNumList", Collections.EMPTY_LIST);
 
-    public void setAction(final String action) {
-        this.action = action;
-    }
+	}
 
-    public String getPaymentid() {
-        return paymentid;
-    }
+	// used only in create
+	public boolean shouldshowVoucherNumber() {
+		String vNumGenMode = "Manual";
+		vNumGenMode = voucherTypeForULB.readVoucherTypes(FinancialConstants.STANDARD_VOUCHER_TYPE_PAYMENT);
+		if (!"Auto".equalsIgnoreCase(vNumGenMode)) {
+			mandatoryFields.add("vouchernumber");
+			return true;
+		} else
+			return false;
+	}
 
-    public void setPaymentid(final String paymentid) {
-        this.paymentid = paymentid;
-    }
+	public void bankBalanceValidation() {
+		AppConfig appConfig = appConfigService.getAppConfigByModuleNameAndKeyName(
+				FinancialConstants.MODULE_NAME_APPCONFIG, FinancialConstants.BALANCE_CHECK_CONTROL_TYPE);
+		if (appConfig != null && !appConfig.getConfValues().isEmpty()) {
+			String appValue = appConfig.getConfValues().get(0).getValue();
+			if (FinancialConstants.MANDATORY.equalsIgnoreCase(appValue)) {
+				bankBalanceCheck = appValue.toLowerCase();
+			} else if (FinancialConstants.WARNING.equalsIgnoreCase(appValue)) {
+				bankBalanceCheck = appValue.toLowerCase();
+			} else if (NONE.equalsIgnoreCase(appValue)) {
+				bankBalanceCheck = appValue.toLowerCase();
+			}
+		}
+	}
 
-    public String getShowMode() {
-        return showMode;
-    }
+	public String getAction() {
+		return action;
+	}
 
-    public void setShowMode(final String showMode) {
-        this.showMode = showMode;
-    }
+	public void setAction(final String action) {
+		this.action = action;
+	}
 
-    public String getFinConstExpendTypeContingency() {
-        return FinancialConstants.STANDARD_EXPENDITURETYPE_CONTINGENT;
-    }
+	public String getPaymentid() {
+		return paymentid;
+	}
 
-    public String getFinConstExpendTypePension() {
-        return FinancialConstants.STANDARD_EXPENDITURETYPE_PENSION;
-    }
+	public void setPaymentid(final String paymentid) {
+		this.paymentid = paymentid;
+	}
 
-   
+	public String getShowMode() {
+		return showMode;
+	}
 
-    
+	public void setShowMode(final String showMode) {
+		this.showMode = showMode;
+	}
+
+	public String getFinConstExpendTypeContingency() {
+		return FinancialConstants.STANDARD_EXPENDITURETYPE_CONTINGENT;
+	}
+
+	public String getFinConstExpendTypePension() {
+		return FinancialConstants.STANDARD_EXPENDITURETYPE_PENSION;
+	}
+
+	public String getBankBalanceCheck() {
+		return bankBalanceCheck;
+	}
+
+	public void setBankBalanceCheck(String bankBalanceCheck) {
+		this.bankBalanceCheck = bankBalanceCheck;
+	}
+
 }

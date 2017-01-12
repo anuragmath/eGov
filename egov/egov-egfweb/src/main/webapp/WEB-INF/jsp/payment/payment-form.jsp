@@ -517,15 +517,9 @@
 					</tr>
 				</table>
 				<s:hidden name="cutOffDate" id="cutOffDate" />
-<<<<<<< HEAD
-				<%@ include file='../workflow/commonworkflow.jsp'%>
+ 				<%@ include file='../workflow/commonworkflow.jsp'%>
 				<%@ include file='../workflow/commonworkflow-button.jsp'%>
-=======
-				<s:hidden name="bankBalanceCheck" id="bankBalanceCheck" value="%{bankBalanceCheck}" />
-			 
-				<%@ include file='../payment/commonWorkflowMatrix.jsp'%>
-				<%@ include file='../workflow/commonWorkflowMatrix-button.jsp'%>
->>>>>>> refs/remotes/origin/develop
+ 				<s:hidden name="bankBalanceCheck" id="bankBalanceCheck" value="%{bankBalanceCheck}" />
 			</div>
 
 			<div class="buttonbottom" id="buttondiv">
@@ -643,17 +637,14 @@
 		function onSubmit()
 		{
 			doLoadingMask();
-<<<<<<< HEAD
-			
+ 			
  			 if(!validateCutOff())
 				return false; 
 			 
-=======
-			var balanceCheckMandatory='<s:text name="payment.mandatory"/>';
+ 			var balanceCheckMandatory='<s:text name="payment.mandatory"/>';
 			var balanceCheckWarning='<s:text name="payment.warning"/>';
 			var noBalanceCheck='<s:text name="payment.none"/>';
->>>>>>> refs/remotes/origin/develop
-			if(dom.get('department').value=='-1')
+ 			if(dom.get('department').value=='-1')
 			{
 				bootbox.alert("Please Select the Department!!");
 				undoLoadingMask();
@@ -744,9 +735,7 @@
 				}
 		}
  
-			}
-		}  
-		
+		 
  
 		function validateCutOff()
 		{
