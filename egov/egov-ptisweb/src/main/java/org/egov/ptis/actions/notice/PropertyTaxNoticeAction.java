@@ -42,13 +42,25 @@ package org.egov.ptis.actions.notice;
 import static org.egov.ptis.constants.PropertyTaxConstants.APPLICATION_TYPE_ALTER_ASSESSENT;
 import static org.egov.ptis.constants.PropertyTaxConstants.APPLICATION_TYPE_DEMOLITION;
 import static org.egov.ptis.constants.PropertyTaxConstants.APPLICATION_TYPE_TAX_EXEMTION;
-import static org.egov.ptis.constants.PropertyTaxConstants.COMMISSIONER_DESGN;
+import static org.egov.ptis.constants.PropertyTaxConstants.CHOULTRY;
+import static org.egov.ptis.constants.PropertyTaxConstants.CURRENTYEAR_FIRST_HALF;
+import static org.egov.ptis.constants.PropertyTaxConstants.EDU_INST;
+import static org.egov.ptis.constants.PropertyTaxConstants.EXSERVICE;
 import static org.egov.ptis.constants.PropertyTaxConstants.FILESTORE_MODULE_NAME;
 import static org.egov.ptis.constants.PropertyTaxConstants.FLOOR_MAP;
+import static org.egov.ptis.constants.PropertyTaxConstants.NGO;
 import static org.egov.ptis.constants.PropertyTaxConstants.NOTICE_TYPE_MUTATION_CERTIFICATE;
 import static org.egov.ptis.constants.PropertyTaxConstants.NOTICE_TYPE_SPECIAL_NOTICE;
+import static org.egov.ptis.constants.PropertyTaxConstants.PENSIONER;
 import static org.egov.ptis.constants.PropertyTaxConstants.PTMODULENAME;
+import static org.egov.ptis.constants.PropertyTaxConstants.PUBLIC_WORSHIP;
 import static org.egov.ptis.constants.PropertyTaxConstants.QUERY_BASICPROPERTY_BY_BASICPROPID;
+import static org.egov.ptis.constants.PropertyTaxConstants.REPORT_CHOULTRY_EXEMPTION_NOTICE;
+import static org.egov.ptis.constants.PropertyTaxConstants.REPORT_EDU_INST_EXEMPTION_NOTICE;
+import static org.egov.ptis.constants.PropertyTaxConstants.REPORT_EXSRVICE_EXEMPTION_NOTICE;
+import static org.egov.ptis.constants.PropertyTaxConstants.REPORT_NGO_EXEMPTION_NOTICE;
+import static org.egov.ptis.constants.PropertyTaxConstants.REPORT_PUBLIC_WORSHIP_EXEMPTION_NOTICE;
+import static org.egov.ptis.constants.PropertyTaxConstants.REPORT_RETIRED_EXEMPTION_NOTICE;
 import static org.egov.ptis.constants.PropertyTaxConstants.STATUS_ISACTIVE;
 import static org.egov.ptis.constants.PropertyTaxConstants.STATUS_ISHISTORY;
 import static org.egov.ptis.constants.PropertyTaxConstants.WFLOW_ACTION_STEP_NOTICE_GENERATE;
@@ -65,6 +77,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -78,9 +91,7 @@ import org.apache.struts2.convention.annotation.Results;
 import org.egov.commons.Installment;
 import org.egov.commons.dao.InstallmentDao;
 import org.egov.demand.model.EgDemandDetails;
-import org.egov.eis.service.DesignationService;
 import org.egov.infra.admin.master.entity.Module;
-import org.egov.infra.admin.master.entity.User;
 import org.egov.infra.admin.master.service.ModuleService;
 import org.egov.infra.config.core.ApplicationThreadLocals;
 import org.egov.infra.exception.ApplicationRuntimeException;
@@ -91,6 +102,7 @@ import org.egov.infra.reporting.engine.ReportOutput;
 import org.egov.infra.reporting.engine.ReportRequest;
 import org.egov.infra.reporting.engine.ReportService;
 import org.egov.infra.reporting.viewer.ReportViewerUtil;
+import org.egov.infra.security.utils.SecurityUtils;
 import org.egov.infra.web.utils.WebUtils;
 import org.egov.infra.workflow.entity.StateAware;
 import org.egov.infstr.services.PersistenceService;
@@ -119,10 +131,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 @ParentPackage("egov")
-@Results({
-        @Result(name = PropertyTaxNoticeAction.NOTICE, location = "propertyTaxNotice-notice.jsp"),
+@Results({ @Result(name = PropertyTaxNoticeAction.NOTICE, location = "propertyTaxNotice-notice.jsp"),
         @Result(name = PropertyTaxNoticeAction.DIGITAL_SIGNATURE_REDIRECTION, location = "propertyTaxNotice-digitalSignatureRedirection.jsp") })
 public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
+    private static final String CITY_GRADE = "cityGrade";
+    private static final String EXEMPTION_REASON = "exemptionReason";
+    private static final String COMMISSIONER = "commissioner";
+    private static final String NOTICE_DATE = "noticeDate";
+    private static final String LOCALITY = "Locality";
+    private static final String ASSESSMENT_NUMBER = "AssessmentNumber";
+    private static final String DOOR_NUMBER = "doorNumber";
+    private static final String OWNER_NAME = "ownerName";
+    private static final String APPLICATION_DATE = "applicationDate";
+    private static final String CURRENT_PROPERTY_TAX = "currentPropertyTax";
     private static final String ALTER = "Alter";
     private static final String BIFURCATE = "Bifurcate";
     private static final String DEMOLITION = "Demolition";
@@ -134,8 +155,8 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
     private static final long serialVersionUID = -396864022983903198L;
     private static final Logger LOGGER = Logger.getLogger(PropertyTaxNoticeAction.class);
     public static final String NOTICE = "notice";
-    private static final String VACANT_LAND="Vacant Land";
-    private static final String TAXEXEMPT ="Tax_Exemption";
+    private static final String VACANT_LAND = "Vacant Land";
+    private static final String TAXEXEMPT = "Tax_Exemption";
     private PropertyImpl property;
     private ReportService reportService;
     private NoticeService noticeService;
@@ -155,9 +176,8 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
     private RevisionPetitionService revisionPetitionService;
     private String signedFileStoreId;
     private boolean digitalSignEnabled;
-    
-    @Autowired
-    private DesignationService designationService;
+
+    private String exemptionReason;
 
     @Autowired
     private PtDemandDao ptDemandDAO;
@@ -171,12 +191,15 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
 
     @Autowired
     private ModuleService moduleDao;
-    
+
     @Autowired
     private PropertyTaxCommonUtils propertyTaxCommonUtils;
 
     @Autowired
     private ReportViewerUtil reportViewerUtil;
+
+    @Autowired
+    private SecurityUtils securityUtils;
 
     public PropertyTaxNoticeAction() {
     }
@@ -186,6 +209,7 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         return null;
     }
 
+    @Override
     public void prepare() {
         digitalSignEnabled = propertyTaxCommonUtils.isDigitalSignatureEnabled();
     }
@@ -201,9 +225,8 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         final String entries[] = basicPropertyIds.split(",");
         final StringBuffer fileStoreId = new StringBuffer();
         for (final String entry : entries) {
-            if (!fileStoreId.toString().equals("")) {
+            if (!fileStoreId.toString().equals(""))
                 fileStoreId.append(",");
-            }
             final String id[] = entry.split("~");
             if (CREATE.equalsIgnoreCase(id[1]) || ALTER.equalsIgnoreCase(id[1]) || BIFURCATE.equalsIgnoreCase(id[1])) {
                 noticeMode = CREATE.equalsIgnoreCase(id[1]) ? CREATE : MODIFY;
@@ -212,8 +235,8 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
                 fileStoreId.append(generatePropertyNotice(Long.valueOf(id[0]), id[1]));
             else if (DEMOLITION.equalsIgnoreCase(id[1])) {
                 noticeMode = APPLICATION_TYPE_DEMOLITION;
-                final BasicPropertyImpl basicProperty = (BasicPropertyImpl) getPersistenceService().findByNamedQuery(
-                        QUERY_BASICPROPERTY_BY_BASICPROPID, Long.valueOf(id[0]));
+                final BasicPropertyImpl basicProperty = (BasicPropertyImpl) getPersistenceService()
+                        .findByNamedQuery(QUERY_BASICPROPERTY_BY_BASICPROPID, Long.valueOf(id[0]));
                 if (basicProperty.getWFProperty() != null) {
                     basicProperty.getProperty().setStatus(STATUS_ISHISTORY);
                     basicProperty.getWFProperty().setStatus(STATUS_ISACTIVE);
@@ -223,25 +246,24 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
             } else {
                 final HttpServletRequest request = ServletActionContext.getRequest();
                 final String url = WebUtils.extractRequestDomainURL(request, false);
-                final String cityLogo = url.concat(PropertyTaxConstants.IMAGE_CONTEXT_PATH).concat(
-                        (String) request.getSession().getAttribute("citylogo"));
+                final String cityLogo = url.concat(PropertyTaxConstants.IMAGE_CONTEXT_PATH)
+                        .concat((String) request.getSession().getAttribute("citylogo"));
                 final String cityName = request.getSession().getAttribute("citymunicipalityname").toString();
-                
-                final String cityGrade = (request.getSession().getAttribute("cityGrade") != null ? request.getSession()
-                        .getAttribute("cityGrade").toString() : null);
+
+                final String cityGrade = request.getSession().getAttribute(CITY_GRADE) != null
+                        ? request.getSession().getAttribute(CITY_GRADE).toString() : null;
                 Boolean isCorporation;
                 if (cityGrade != null && cityGrade != ""
-                        && cityGrade.equalsIgnoreCase(PropertyTaxConstants.CITY_GRADE_CORPORATION)) {
+                        && cityGrade.equalsIgnoreCase(PropertyTaxConstants.CITY_GRADE_CORPORATION))
                     isCorporation = true;
-                } else
+                else
                     isCorporation = false;
-                
-                
-                final PropertyMutation propertyMutation = (PropertyMutation) persistenceService.find(
-                        "From PropertyMutation where id = ? ", Long.valueOf(id[0]));
+
+                final PropertyMutation propertyMutation = (PropertyMutation) persistenceService
+                        .find("From PropertyMutation where id = ? ", Long.valueOf(id[0]));
                 final BasicProperty basicProperty = propertyMutation.getBasicProperty();
                 transferOwnerService.generateTransferNotice(basicProperty, propertyMutation, cityName, cityLogo,
-                        WFLOW_ACTION_STEP_SIGN,isCorporation);
+                        WFLOW_ACTION_STEP_SIGN, isCorporation);
                 final PtNotice notice = noticeService.getNoticeByNoticeTypeAndApplicationNumber(
                         NOTICE_TYPE_MUTATION_CERTIFICATE, propertyMutation.getApplicationNo());
                 fileStoreId.append(notice.getFileStore().getFileStoreId());
@@ -264,8 +286,8 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
             notice = noticeService.getNoticeByNoticeTypeAndApplicationNumber(NOTICE_TYPE_SPECIAL_NOTICE,
                     revisionPetition.getObjectionNumber());
         } else {
-            basicProperty = (BasicPropertyImpl) getPersistenceService().findByNamedQuery(
-                    QUERY_BASICPROPERTY_BY_BASICPROPID, basicPropertyId);
+            basicProperty = (BasicPropertyImpl) getPersistenceService()
+                    .findByNamedQuery(QUERY_BASICPROPERTY_BY_BASICPROPID, basicPropertyId);
             property = (PropertyImpl) basicProperty.getProperty();
             if (property == null)
                 property = (PropertyImpl) basicProperty.getWFProperty();
@@ -282,11 +304,11 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         PtNotice savedNotice = null;
         if (notice == null) {
             if (REVISION_PETITION.equalsIgnoreCase(type))
-                savedNotice = noticeService
-                        .saveNotice(revisionPetition.getObjectionNumber(), revisionPetition.getObjectionNumber()
+                savedNotice = noticeService.saveNotice(revisionPetition.getObjectionNumber(),
+                        revisionPetition.getObjectionNumber()
                                 .concat(PropertyTaxConstants.NOTICE_TYPE_REVISIONPETITION_SPECIALNOTICE_PREFIX),
-                                PropertyTaxConstants.NOTICE_TYPE_SPECIAL_NOTICE, revisionPetition.getBasicProperty(),
-                                NoticePDF);
+                        PropertyTaxConstants.NOTICE_TYPE_SPECIAL_NOTICE, revisionPetition.getBasicProperty(),
+                        NoticePDF);
             else
                 savedNotice = noticeService.saveNotice(basicProperty.getPropertyForBasicProperty().getApplicationNo(),
                         noticeNo, noticeType, basicProperty, NoticePDF);
@@ -299,8 +321,8 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
     @Action(value = "/notice/propertyTaxNotice-generateNotice")
     public String generateNotice() {
         setUlbCode(ApplicationThreadLocals.getCityCode());
-        final BasicPropertyImpl basicProperty = (BasicPropertyImpl) getPersistenceService().findByNamedQuery(
-                QUERY_BASICPROPERTY_BY_BASICPROPID, basicPropId);
+        final BasicPropertyImpl basicProperty = (BasicPropertyImpl) getPersistenceService()
+                .findByNamedQuery(QUERY_BASICPROPERTY_BY_BASICPROPID, basicPropId);
         property = (PropertyImpl) basicProperty.getProperty();
         if (property == null)
             property = (PropertyImpl) basicProperty.getWFProperty();
@@ -333,8 +355,9 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
                 NoticePDF = new ByteArrayInputStream(reportOutput.getReportOutputData());
             if (WFLOW_ACTION_STEP_SIGN.equals(actionType)) {
                 if (notice == null) {
-                    final PtNotice savedNotice = noticeService.saveNotice(basicProperty.getPropertyForBasicProperty()
-                            .getApplicationNo(), noticeNo, noticeType, basicProperty, NoticePDF);
+                    final PtNotice savedNotice = noticeService.saveNotice(
+                            basicProperty.getPropertyForBasicProperty().getApplicationNo(), noticeNo, noticeType,
+                            basicProperty, NoticePDF);
                     setFileStoreIds(savedNotice.getFileStore().getFileStoreId());
                 } else {
                     final PtNotice savedNotice = noticeService.updateNotice(notice, NoticePDF);
@@ -342,9 +365,66 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
                 }
                 noticeService.getSession().flush();
                 return DIGITAL_SIGNATURE_REDIRECTION;
-            } else {
+            } else
                 reportId = reportViewerUtil.addReportToTempCache(reportOutput);
+        }
+        if (!PREVIEW.equals(actionType)) {
+            propService.updateIndexes(property, APPLICATION_TYPE_ALTER_ASSESSENT);
+            basicPropertyService.update(basicProperty);
+        }
+        return NOTICE;
+    }
+
+    @Action(value = "/notice/propertyTaxNotice-generateExemptionNotice")
+    public String generateExemptionNotice() {
+        setUlbCode(ApplicationThreadLocals.getCityCode());
+        final BasicPropertyImpl basicProperty = (BasicPropertyImpl) getPersistenceService()
+                .findByNamedQuery(QUERY_BASICPROPERTY_BY_BASICPROPID, basicPropId);
+        property = (PropertyImpl) basicProperty.getProperty();
+        if (property == null)
+            property = (PropertyImpl) basicProperty.getWFProperty();
+
+        final PtNotice notice = noticeService.getNoticeByNoticeTypeAndApplicationNumber(noticeType,
+                property.getApplicationNo());
+        ReportOutput reportOutput = new ReportOutput();
+        if (WFLOW_ACTION_STEP_NOTICE_GENERATE.equalsIgnoreCase(actionType)) {
+            final FileStoreMapper fsm = notice.getFileStore();
+            final File file = fileStoreService.fetch(fsm, FILESTORE_MODULE_NAME);
+            byte[] bFile;
+            try {
+                bFile = FileUtils.readFileToByteArray(file);
+            } catch (final IOException e) {
+                throw new ApplicationRuntimeException("Exception while generating Special Notcie : " + e);
             }
+            reportOutput.setReportOutputData(bFile);
+            reportOutput.setReportFormat(FileFormat.PDF);
+            reportId = reportViewerUtil.addReportToTempCache(reportOutput);
+            endWorkFlow(basicProperty);
+        } else {
+            PropertyNoticeInfo propertyNotice = null;
+            String noticeNo = null;
+            if (WFLOW_ACTION_STEP_SIGN.equals(actionType) && notice == null)
+                noticeNo = propertyTaxNumberGenerator.generateNoticeNumber(noticeType);
+            propertyNotice = new PropertyNoticeInfo(property, noticeNo);
+            final ReportRequest reportInput = generateExemptedNoticeReportRequest(basicProperty, propertyNotice,
+                    exemptionReason, noticeNo);
+            reportOutput = reportService.createReport(reportInput);
+            if (reportOutput != null && reportOutput.getReportOutputData() != null)
+                NoticePDF = new ByteArrayInputStream(reportOutput.getReportOutputData());
+            if (WFLOW_ACTION_STEP_SIGN.equals(actionType)) {
+                if (notice == null) {
+                    final PtNotice savedNotice = noticeService.saveNotice(
+                            basicProperty.getPropertyForBasicProperty().getApplicationNo(), noticeNo, noticeType,
+                            basicProperty, NoticePDF);
+                    setFileStoreIds(savedNotice.getFileStore().getFileStoreId());
+                } else {
+                    final PtNotice savedNotice = noticeService.updateNotice(notice, NoticePDF);
+                    setFileStoreIds(savedNotice.getFileStore().getFileStoreId());
+                }
+                noticeService.getSession().flush();
+                return DIGITAL_SIGNATURE_REDIRECTION;
+            } else
+                reportId = reportViewerUtil.addReportToTempCache(reportOutput);
         }
         if (!PREVIEW.equals(actionType)) {
             propService.updateIndexes(property, APPLICATION_TYPE_ALTER_ASSESSENT);
@@ -355,10 +435,10 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
 
     @Action(value = "/notice/propertyTaxNotice-generateSpecialNotice")
     public String generateSpecialNotice() {
-        final Map<String, Object> reportParams = new HashMap<String, Object>();
+        new HashMap<String, Object>();
         ReportRequest reportInput = null;
-        final BasicPropertyImpl basicProperty = (BasicPropertyImpl) getPersistenceService().findByNamedQuery(
-                QUERY_BASICPROPERTY_BY_BASICPROPID, basicPropId);
+        final BasicPropertyImpl basicProperty = (BasicPropertyImpl) getPersistenceService()
+                .findByNamedQuery(QUERY_BASICPROPERTY_BY_BASICPROPID, basicPropId);
         property = (PropertyImpl) basicProperty.getProperty();
 
         if (property == null)
@@ -383,14 +463,14 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
 
     @Action(value = "/notice/previewSignedNotice")
     public String previewSignedNotice() {
-        File file = fileStoreService.fetch(signedFileStoreId, FILESTORE_MODULE_NAME);
+        final File file = fileStoreService.fetch(signedFileStoreId, FILESTORE_MODULE_NAME);
         byte[] bFile;
         try {
             bFile = FileUtils.readFileToByteArray(file);
         } catch (final IOException e) {
             throw new ApplicationRuntimeException("Exception while generating Special Notcie : " + e);
         }
-        ReportOutput reportOutput = new ReportOutput();
+        final ReportOutput reportOutput = new ReportOutput();
         reportOutput.setReportOutputData(bFile);
         reportOutput.setReportFormat(FileFormat.PDF);
         reportId = reportViewerUtil.addReportToTempCache(reportOutput);
@@ -401,24 +481,23 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
             final PropertyNoticeInfo propertyNotice) {
         final Map<String, Object> reportParams = new HashMap<String, Object>();
         ReportRequest reportInput = null;
-        final List<User> users = eisCommonService.getAllActiveUsersByGivenDesig(designationService
-                .getDesignationByName(COMMISSIONER_DESGN).getId());
-        reportParams.put("userSignature", (!users.isEmpty() && users.get(0).getSignature() != null) ? new ByteArrayInputStream(users.get(0).getSignature()) : null);
+        reportParams.put("userSignature", securityUtils.getCurrentUser().getSignature() != null
+                ? new ByteArrayInputStream(securityUtils.getCurrentUser().getSignature()) : "");
         if (NOTICE_TYPE_SPECIAL_NOTICE.equals(noticeType)) {
             final HttpServletRequest request = ServletActionContext.getRequest();
             final String url = WebUtils.extractRequestDomainURL(request, false);
-            final String imagePath = url.concat(PropertyTaxConstants.IMAGE_CONTEXT_PATH).concat(
-                    (String) request.getSession().getAttribute("citylogo"));
+            final String imagePath = url.concat(PropertyTaxConstants.IMAGE_CONTEXT_PATH)
+                    .concat((String) request.getSession().getAttribute("citylogo"));
             final String cityName = request.getSession().getAttribute("citymunicipalityname").toString();
-            final String cityGrade = (request.getSession().getAttribute("cityGrade") != null ? request.getSession()
-                    .getAttribute("cityGrade").toString() : null);
+            final String cityGrade = request.getSession().getAttribute(CITY_GRADE) != null
+                    ? request.getSession().getAttribute(CITY_GRADE).toString() : null;
             Boolean isCorporation;
             reportParams.put("logoPath", imagePath);
             reportParams.put("cityName", cityName);
             if (cityGrade != null && cityGrade != ""
-                    && cityGrade.equalsIgnoreCase(PropertyTaxConstants.CITY_GRADE_CORPORATION)) {
+                    && cityGrade.equalsIgnoreCase(PropertyTaxConstants.CITY_GRADE_CORPORATION))
                 isCorporation = true;
-            } else
+            else
                 isCorporation = false;
             reportParams.put("isCorporation", isCorporation);
             if (CREATE.equalsIgnoreCase(noticeMode))
@@ -439,15 +518,95 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         return reportInput;
     }
 
+    private ReportRequest generateExemptedNoticeReportRequest(final BasicPropertyImpl basicProperty,
+            final PropertyNoticeInfo propertyNotice, final String exemptionReason, final String noticeNo) {
+        final Map<String, Object> reportParams = new HashMap<>();
+        ReportRequest reportInput;
+        reportParams.put("userSignature", securityUtils.getCurrentUser().getSignature() != null
+                ? new ByteArrayInputStream(securityUtils.getCurrentUser().getSignature()) : "");
+        reportParams.put("noticeNo", noticeNo);
+        String installment = null;
+        final Installment currInstallment = propertyTaxCommonUtils.getCurrentInstallment();
+        final Map<String, Installment> currInstallments = propertyTaxUtil.getInstallmentsForCurrYear(new Date());
+        for (final Entry<String, Installment> entry : currInstallments.entrySet())
+            if (currInstallment.equals(entry.getValue()))
+                installment = entry.getKey();
+        BigDecimal currentPropertyTax;
+        final Map<String, BigDecimal> propertyTaxDetails = ptDemandDAO.getDemandCollMap(basicProperty.getProperty());
+        if (CURRENTYEAR_FIRST_HALF.equalsIgnoreCase(installment))
+            currentPropertyTax = propertyTaxDetails.get("CURR_FIRSTHALF_DMD");
+        else
+            currentPropertyTax = propertyTaxDetails.get("CURR_SECONDHALF_DMD");
+        final SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy");
+        reportParams.put(CURRENT_PROPERTY_TAX, currentPropertyTax);
+        reportParams.put(APPLICATION_DATE, formatter.format(basicProperty.getActiveProperty().getCreatedDate()));
+        reportParams.put(OWNER_NAME, basicProperty.getFullOwnerName());
+        reportParams.put(DOOR_NUMBER, basicProperty.getAddress().getHouseNoBldgApt());
+        reportParams.put(ASSESSMENT_NUMBER, basicProperty.getUpicNo());
+        reportParams.put(LOCALITY, basicProperty.getAddress().getAreaLocalitySector());
+        reportParams.put(NOTICE_DATE, formatter.format(new Date()));
+        reportParams.put(COMMISSIONER, securityUtils.getCurrentUser().getName());
+        reportParams.put(EXEMPTION_REASON, exemptionReason);
+        final HttpServletRequest request = ServletActionContext.getRequest();
+        final String url = WebUtils.extractRequestDomainURL(request, false);
+        final String imagePath = url.concat(PropertyTaxConstants.IMAGE_CONTEXT_PATH)
+                .concat((String) request.getSession().getAttribute("citylogo"));
+        final String cityName = request.getSession().getAttribute("citymunicipalityname").toString();
+        final String cityGrade = request.getSession().getAttribute(CITY_GRADE) != null
+                ? request.getSession().getAttribute(CITY_GRADE).toString() : null;
+        Boolean isCorporation;
+        reportParams.put("logoPath", imagePath);
+        reportParams.put("cityName", cityName);
+        if (cityGrade != null && cityGrade != ""
+                && cityGrade.equalsIgnoreCase(PropertyTaxConstants.CITY_GRADE_CORPORATION))
+            isCorporation = true;
+        else
+            isCorporation = false;
+        reportParams.put("isCorporation", isCorporation);
+        reportParams.put("actionType", actionType);
+        setNoticeInfo(propertyNotice, basicProperty, noticeMode);
+        reportInput = getExemptionReason(propertyNotice, exemptionReason, reportParams);
+
+        if (reportInput != null) {
+            reportInput.setPrintDialogOnOpenReport(true);
+            reportInput.setReportFormat(FileFormat.PDF);
+        }
+        return reportInput;
+    }
+
+    private ReportRequest getExemptionReason(final PropertyNoticeInfo propertyNotice, final String exemptionReason,
+            final Map<String, Object> reportParams) {
+        ReportRequest reportInput = null;
+        if (NGO.equalsIgnoreCase(exemptionReason))
+            reportInput = new ReportRequest(REPORT_NGO_EXEMPTION_NOTICE, propertyNotice,
+                    reportParams);
+        else if (PENSIONER.equalsIgnoreCase(exemptionReason))
+            reportInput = new ReportRequest(REPORT_RETIRED_EXEMPTION_NOTICE, propertyNotice,
+                    reportParams);
+        else if (EDU_INST.equalsIgnoreCase(exemptionReason))
+            reportInput = new ReportRequest(REPORT_EDU_INST_EXEMPTION_NOTICE, propertyNotice,
+                    reportParams);
+        else if (EXSERVICE.equalsIgnoreCase(exemptionReason) || "EX-SERVICE".equalsIgnoreCase(exemptionReason))
+            reportInput = new ReportRequest(REPORT_EXSRVICE_EXEMPTION_NOTICE, propertyNotice,
+                    reportParams);
+        else if (CHOULTRY.equalsIgnoreCase(exemptionReason))
+            reportInput = new ReportRequest(REPORT_CHOULTRY_EXEMPTION_NOTICE, propertyNotice,
+                    reportParams);
+        else if (PUBLIC_WORSHIP.equalsIgnoreCase(exemptionReason))
+            reportInput = new ReportRequest(REPORT_PUBLIC_WORSHIP_EXEMPTION_NOTICE, propertyNotice,
+                    reportParams);
+        return reportInput;
+    }
+
     private void setNoticeInfo(final PropertyNoticeInfo propertyNotice, final BasicPropertyImpl basicProperty,
-            String noticeMode) {
-    	 String ownerType=null;
-         String owner="";
+            final String noticeMode) {
+        String ownerType = null;
+        String owner = "";
         final PropertyAckNoticeInfo infoBean = new PropertyAckNoticeInfo();
         final Address ownerAddress = basicProperty.getAddress();
         BigDecimal totalTax = BigDecimal.ZERO;
         BigDecimal propertyTax = BigDecimal.ZERO;
-        
+
         if (basicProperty.getPropertyOwnerInfo().size() > 1)
             infoBean.setOwnerName(basicProperty.getFullOwnerName().concat(" and others"));
         else
@@ -461,7 +620,7 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         else
             infoBean.setStreetName("N/A");
         final SimpleDateFormat formatNowYear = new SimpleDateFormat("MMMM yyyy");
-        Module module = moduleDao.getModuleByName(PTMODULENAME);
+        final Module module = moduleDao.getModuleByName(PTMODULENAME);
         infoBean.setAssessmentNo(basicProperty.getUpicNo());
         infoBean.setAssessmentDate(sdf.format(basicProperty.getAssessmentdate()).toString());
         Ptdemand currDemand = null;
@@ -477,7 +636,7 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
                     basicProperty.getPropOccupationDate());
             occupancyYear = formatNowYear.format(installment.getFromDate());
             infoBean.setInstallmentYear(occupancyYear);
-        } else 
+        } else
             installment = installmentDao.getInsatllmentByModuleForGivenDate(module, property.getEffectiveDate());
         if (noticeMode.equalsIgnoreCase(MODIFY) || noticeMode.equalsIgnoreCase(DEMOLITION)) {
             // Sets data for the current property
@@ -487,8 +646,8 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
                 infoBean.setNew_rev_ARV(currDemand.getDmdCalculations().getAlv());
 
             // Sets data for the latest history property
-            PropertyImpl historyProperty = propService.getLatestHistoryProperty(basicProperty.getUpicNo());
-            Ptdemand historyDemand = ptDemandDAO.getNonHistoryCurrDmdForProperty(historyProperty);
+            final PropertyImpl historyProperty = propService.getLatestHistoryProperty(basicProperty.getUpicNo());
+            final Ptdemand historyDemand = ptDemandDAO.getNonHistoryCurrDmdForProperty(historyProperty);
             if (historyProperty != null && historyDemand != null) {
                 totalTax = BigDecimal.ZERO;
                 propertyTax = BigDecimal.ZERO;
@@ -496,21 +655,21 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
                 if (historyDemand.getDmdCalculations() != null && historyDemand.getDmdCalculations().getAlv() != null)
                     infoBean.setExistingARV(historyDemand.getDmdCalculations().getAlv());
             }
-        }else if (noticeMode.equalsIgnoreCase(TAXEXEMPT)) {
-	         if(property.getIsExemptedFromTax()){
-	        	currDemand = ptDemandDAO.getNonHistoryCurrDmdForProperty(property);
-	        	prepareTaxInfoForHistoryProperty(infoBean, totalTax, propertyTax, currDemand);
-	        	infoBean.setExistingARV((currDemand.getDmdCalculations().getAlv())!=null?(currDemand.getDmdCalculations().getAlv()):BigDecimal.ZERO);
-	        }else if(!property.getIsExemptedFromTax()){
-	        	PropertyImpl historyProperty = propService.getLatestHistoryProperty(basicProperty.getUpicNo());
-	            Ptdemand historyDemand = ptDemandDAO.getNonHistoryCurrDmdForProperty(historyProperty);
-	            if (historyProperty != null && historyDemand != null) {
-	                totalTax = BigDecimal.ZERO;
-	                propertyTax = BigDecimal.ZERO;
-	                prepareTaxInfoForActiveProperty(infoBean, totalTax, propertyTax, historyDemand, noticeMode);
-	            }
-	        }
-        }
+        } else if (noticeMode.equalsIgnoreCase(TAXEXEMPT))
+            if (property.getIsExemptedFromTax()) {
+                currDemand = ptDemandDAO.getNonHistoryCurrDmdForProperty(property);
+                prepareTaxInfoForHistoryProperty(infoBean, totalTax, propertyTax, currDemand);
+                infoBean.setExistingARV(currDemand.getDmdCalculations().getAlv() != null
+                        ? currDemand.getDmdCalculations().getAlv() : BigDecimal.ZERO);
+            } else if (!property.getIsExemptedFromTax()) {
+                final PropertyImpl historyProperty = propService.getLatestHistoryProperty(basicProperty.getUpicNo());
+                final Ptdemand historyDemand = ptDemandDAO.getNonHistoryCurrDmdForProperty(historyProperty);
+                if (historyProperty != null && historyDemand != null) {
+                    totalTax = BigDecimal.ZERO;
+                    propertyTax = BigDecimal.ZERO;
+                    prepareTaxInfoForActiveProperty(infoBean, totalTax, propertyTax, historyDemand, noticeMode);
+                }
+            }
         occupancyYear = formatNowYear.format(installment.getFromDate());
         infoBean.setInstallmentYear(occupancyYear);
         final PropertyID propertyId = basicProperty.getPropertyID();
@@ -518,14 +677,12 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         infoBean.setWardName(propertyId.getWard().getName());
         infoBean.setAreaName(propertyId.getArea().getName());
         infoBean.setLocalityName(propertyId.getLocality().getName());
-        if (property.getSource().equals(PropertyTaxConstants.SOURCEOFDATA_MEESEWA)) {
+        if (property.getSource().equals(PropertyTaxConstants.SOURCEOFDATA_MEESEWA))
             infoBean.setMeesevaNo(property.getApplicationNo());
-        }
         infoBean.setNoticeDate(new Date());
-        ownerType=property.getPropertyDetail().getPropertyTypeMaster().getType();
+        ownerType = property.getPropertyDetail().getPropertyTypeMaster().getType();
         infoBean.setOwnershipType(ownerType);
-        if (ownerType.equalsIgnoreCase(VACANT_LAND)
-                || (noticeMode != null && noticeMode.equalsIgnoreCase(DEMOLITION))) {
+        if (ownerType.equalsIgnoreCase(VACANT_LAND) || noticeMode != null && noticeMode.equalsIgnoreCase(DEMOLITION)) {
             owner = "(On Land)";
             infoBean.setExtentOfSite(new BigDecimal(property.getPropertyDetail().getSitalArea().getArea()));
             infoBean.setSurveyNumber(property.getPropertyDetail().getSurveyNumber());
@@ -536,53 +693,52 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         }
         infoBean.setOwnerTypeForReport(owner);
         propertyNotice.setOwnerInfo(infoBean);
-       
+
     }
 
     /**
      * Sets data for the current property(new/modify)
      */
     private void prepareTaxInfoForActiveProperty(final PropertyAckNoticeInfo infoBean, BigDecimal totalTax,
-            BigDecimal propertyTax, Ptdemand currDemand, String noticeMode) {
-        for (final EgDemandDetails demandDetail : currDemand.getEgDemandDetails()) {
+            BigDecimal propertyTax, final Ptdemand currDemand, final String noticeMode) {
+        for (final EgDemandDetails demandDetail : currDemand.getEgDemandDetails())
             if (demandDetail.getEgDemandReason().getEgInstallmentMaster()
                     .equals(propertyTaxCommonUtils.getCurrentPeriodInstallment())) {
-                if(!demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
-                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_PENALTY_FINES)) {
-                totalTax = totalTax.add(demandDetail.getAmount());
-            	}
+                if (!demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
+                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_PENALTY_FINES))
+                    totalTax = totalTax.add(demandDetail.getAmount());
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
-                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_EDUCATIONAL_CESS)) {
+                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_EDUCATIONAL_CESS))
                     propertyTax = propertyTax.add(demandDetail.getAmount());
-                }
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
                         .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_LIBRARY_CESS)) {
                     if (noticeMode.equalsIgnoreCase(CREATE))
                         infoBean.setNewLibraryCess(demandDetail.getAmount());
-                    if (noticeMode.equalsIgnoreCase(MODIFY)||noticeMode.equalsIgnoreCase(TAXEXEMPT) || noticeMode.equalsIgnoreCase(DEMOLITION))
+                    if (noticeMode.equalsIgnoreCase(MODIFY) || noticeMode.equalsIgnoreCase(TAXEXEMPT)
+                            || noticeMode.equalsIgnoreCase(DEMOLITION))
                         infoBean.setRevLibraryCess(demandDetail.getAmount());
                 }
 
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
                         .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_GENERAL_TAX)
                         || demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
-                                .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_VACANT_TAX)) {
+                                .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_VACANT_TAX))
                     propertyTax = propertyTax.add(demandDetail.getAmount());
-                }
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
                         .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_UNAUTHORIZED_PENALTY)) {
                     if (noticeMode.equalsIgnoreCase(CREATE))
                         infoBean.setNewUCPenalty(demandDetail.getAmount());
-                    if (noticeMode.equalsIgnoreCase(MODIFY)|| noticeMode.equalsIgnoreCase(TAXEXEMPT) || noticeMode.equalsIgnoreCase(DEMOLITION))
+                    if (noticeMode.equalsIgnoreCase(MODIFY) || noticeMode.equalsIgnoreCase(TAXEXEMPT)
+                            || noticeMode.equalsIgnoreCase(DEMOLITION))
                         infoBean.setRevUCPenalty(demandDetail.getAmount());
                 }
             }
-        }
         if (noticeMode.equalsIgnoreCase(CREATE)) {
             infoBean.setNewTotalTax(totalTax);
             infoBean.setNewPropertyTax(propertyTax);
         }
-        if (noticeMode.equalsIgnoreCase(MODIFY)|| noticeMode.equalsIgnoreCase(TAXEXEMPT) || noticeMode.equalsIgnoreCase(DEMOLITION)) {
+        if (noticeMode.equalsIgnoreCase(MODIFY) || noticeMode.equalsIgnoreCase(TAXEXEMPT)
+                || noticeMode.equalsIgnoreCase(DEMOLITION)) {
             infoBean.setRevTotalTax(totalTax);
             infoBean.setRevPropertyTax(propertyTax);
         }
@@ -592,32 +748,28 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
      * Sets data for the latest history property
      */
     private void prepareTaxInfoForHistoryProperty(final PropertyAckNoticeInfo infoBean, BigDecimal totalTax,
-            BigDecimal propertyTax, Ptdemand currDemand) {
-        for (final EgDemandDetails demandDetail : currDemand.getEgDemandDetails()) {
+            BigDecimal propertyTax, final Ptdemand currDemand) {
+        for (final EgDemandDetails demandDetail : currDemand.getEgDemandDetails())
             if (demandDetail.getEgDemandReason().getEgInstallmentMaster()
                     .equals(propertyTaxCommonUtils.getCurrentPeriodInstallment())) {
-            	if(!demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
-                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_PENALTY_FINES)) {
-                totalTax = totalTax.add(demandDetail.getAmount());
-            	}
+                if (!demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
+                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_PENALTY_FINES))
+                    totalTax = totalTax.add(demandDetail.getAmount());
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
-                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_EDUCATIONAL_CESS)) {
+                        .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_EDUCATIONAL_CESS))
                     propertyTax = propertyTax.add(demandDetail.getAmount());
-                }
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
                         .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_LIBRARY_CESS))
                     infoBean.setExistingLibraryCess(demandDetail.getAmount());
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
                         .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_GENERAL_TAX)
                         || demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
-                                .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_VACANT_TAX)) {
+                                .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_VACANT_TAX))
                     propertyTax = propertyTax.add(demandDetail.getAmount());
-                }
                 if (demandDetail.getEgDemandReason().getEgDemandReasonMaster().getCode()
                         .equalsIgnoreCase(PropertyTaxConstants.DEMANDRSN_CODE_UNAUTHORIZED_PENALTY))
                     infoBean.setExistingUCPenalty(demandDetail.getAmount());
             }
-        }
         infoBean.setExistingTotalTax(totalTax);
         infoBean.setExistingPropertyTax(propertyTax);
     }
@@ -631,16 +783,16 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
             floorInfo.setBuildingClassification(floor.getStructureClassification().getTypeName());
             floorInfo.setNatureOfUsage(floor.getPropertyUsage().getUsageName());
             floorInfo.setPlinthArea(new BigDecimal(floor.getBuiltUpArea().getArea()));
-            floorInfo.setBuildingAge(floor.getDepreciationMaster() != null ? floor.getDepreciationMaster()
-                    .getDepreciationName() : "N/A");
-            floorInfo.setMonthlyRentalValue(floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getMrv()
-                    : BigDecimal.ZERO);
-            floorInfo.setYearlyRentalValue(floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getAlv()
-                    : BigDecimal.ZERO);
-            floorInfo.setTaxPayableForCurrYear(floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getTotalTaxPayble()
-            		: BigDecimal.ZERO);
-            floorInfo.setRate(floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getCategoryAmt()
-            		: BigDecimal.ZERO);
+            floorInfo.setBuildingAge(floor.getDepreciationMaster() != null
+                    ? floor.getDepreciationMaster().getDepreciationName() : "N/A");
+            floorInfo.setMonthlyRentalValue(
+                    floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getMrv() : BigDecimal.ZERO);
+            floorInfo.setYearlyRentalValue(
+                    floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getAlv() : BigDecimal.ZERO);
+            floorInfo.setTaxPayableForCurrYear(
+                    floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getTotalTaxPayble() : BigDecimal.ZERO);
+            floorInfo.setRate(
+                    floor.getFloorDmdCalc() != null ? floor.getFloorDmdCalc().getCategoryAmt() : BigDecimal.ZERO);
             floorInfo.setBldngFloorNo(FLOOR_MAP.get(floor.getFloorNo()));
             floorDetailsList.add(floorInfo);
         }
@@ -654,7 +806,7 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         LOGGER.debug("endWorkFlow: Workflow will end for Property: " + property);
         property.transition().end();
         basicProperty.setUnderWorkflow(false);
-        LOGGER.debug("Exit method endWorkFlow, Workflow ended");   
+        LOGGER.debug("Exit method endWorkFlow, Workflow ended");
     }
 
     public void setReportService(final ReportService reportService) {
@@ -771,7 +923,7 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         return signedFileStoreId;
     }
 
-    public void setSignedFileStoreId(String signedFileStoreId) {
+    public void setSignedFileStoreId(final String signedFileStoreId) {
         this.signedFileStoreId = signedFileStoreId;
     }
 
@@ -779,8 +931,16 @@ public class PropertyTaxNoticeAction extends PropertyTaxBaseAction {
         return digitalSignEnabled;
     }
 
-    public void setDigitalSignEnabled(boolean digitalSignEnabled) {
+    public void setDigitalSignEnabled(final boolean digitalSignEnabled) {
         this.digitalSignEnabled = digitalSignEnabled;
+    }
+
+    public String getExemptionReason() {
+        return exemptionReason;
+    }
+
+    public void setExemptionReason(final String exemptionReason) {
+        this.exemptionReason = exemptionReason;
     }
 
 }

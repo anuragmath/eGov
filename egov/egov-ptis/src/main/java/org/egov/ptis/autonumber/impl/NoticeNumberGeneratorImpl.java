@@ -62,13 +62,28 @@ public class NoticeNumberGeneratorImpl implements NoticeNumberGenerator {
         String noticeNumber = "";
         if (StringUtils.isNotBlank(noticeType)) {
             String noticeTypeCode = "";
-            if (noticeType.equalsIgnoreCase(PropertyTaxConstants.NOTICE_TYPE_SPECIAL_NOTICE))
+            if (PropertyTaxConstants.NOTICE_TYPE_SPECIAL_NOTICE.equalsIgnoreCase(noticeType))
                 noticeTypeCode = "SN";
-            else if (noticeType.equalsIgnoreCase(PropertyTaxConstants.NOTICE_TYPE_MUTATION_CERTIFICATE))
+            else if (PropertyTaxConstants.NOTICE_TYPE_MUTATION_CERTIFICATE.equalsIgnoreCase(noticeType))
                 noticeTypeCode = "MC";
-            else if (noticeType.equalsIgnoreCase(PropertyTaxConstants.NOTICE_TYPE_ESD))
+            else if (PropertyTaxConstants.NOTICE_TYPE_ESD.equalsIgnoreCase(noticeType))
                 noticeTypeCode = "ESD";
-
+            else if (PropertyTaxConstants.NOTICE_TYPE_RPPROCEEDINGS.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "RP";
+            else if (PropertyTaxConstants.NOTICE_TYPE_GRPPROCEEDINGS.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "GRP";
+            else if (PropertyTaxConstants.NOTICE_TYPE_REVISIONPETITION_HEARINGNOTICE.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "HN";
+            else if (PropertyTaxConstants.NOTICE_TYPE_VRPROCEEDINGS.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "VR";
+            else if (PropertyTaxConstants.NOTICE_TYPE_INVENTORY.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "IN";
+            else if (PropertyTaxConstants.NOTICE_TYPE_DISTRESS.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "DN";
+            else if (PropertyTaxConstants.NOTICE_TYPE_EXEMPTION.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "EX";
+            else if (PropertyTaxConstants.VALUATION_CERTIFICATE.equalsIgnoreCase(noticeType))
+                noticeTypeCode = "VC";
             final String sequenceName = SEQ_EGPT_NOTICE_NUMBER;
             final Serializable nextSequence = applicationSequenceNumberGenerator.getNextSequence(sequenceName);
             noticeNumber = String.format("%s/%s%06d", noticeTypeCode, ApplicationThreadLocals.getCityCode(), nextSequence);

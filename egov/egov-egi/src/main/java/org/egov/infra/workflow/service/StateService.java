@@ -40,6 +40,8 @@
 
 package org.egov.infra.workflow.service;
 
+ 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -71,15 +73,17 @@ public class StateService {
         this.stateRepository = stateRepository;
     }
 
-    public boolean isPositionUnderWorkflow(final Long posId) {
-        return stateRepository.countByOwnerPosition_Id(posId) > 0;
+    public boolean isPositionUnderWorkflow(final Long posId, final Date givenDate) {
+        return stateRepository.countByOwnerPosition_IdAndCreatedDateGreaterThanEqual(posId, givenDate) > 0;
     }
 
+ 
     public List<String> getAssignedWorkflowTypeNames(List<Long> ownerIds,List<String> enabledTypes) {
         return stateRepository.findAllTypeByOwnerAndStatus(ownerIds,enabledTypes);
     }
+   
 
-    public State getStateById(Long id) {
+    public State getStateById(final Long id) {
         return stateRepository.findOne(id);
     }
     

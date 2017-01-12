@@ -40,6 +40,7 @@
 
 package org.egov.tl.repository;
 
+import org.apache.log4j.Logger;
 import org.egov.tl.entity.FeeMatrix;
 import org.egov.tl.entity.FeeMatrixDetail;
 import org.hibernate.Criteria;
@@ -47,29 +48,47 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
-import java.util.Date;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+import java.util.ArrayList;
+
 import java.util.List;
+import java.util.Optional;
 
 public class FeeMatrixDetailRepositoryImpl implements FeeMatrixDetailRepositoryCustom {
+    private static final Logger LOGGER = Logger.getLogger(FeeMatrixDetailRepositoryImpl.class);
+
     @PersistenceContext
     private EntityManager entityManager;
 
     @Override
-    public FeeMatrixDetail findFeeDetailList(final FeeMatrix feeMatrix, final Integer uom, final Date appdate,
-            final long financialYearId) {
+    public Optional<FeeMatrixDetail> findFeeDetailList(final FeeMatrix feeMatrix, final Integer uom) {
+        try {
+            CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+            CriteriaQuery<FeeMatrixDetail> cq = cb
+                    .createQuery(FeeMatrixDetail.class);
 
-        FeeMatrixDetail fmd = null;
-        final String qlString = "select fd from  FeeMatrixDetail fd  where fd.feeMatrix=:feeMatrix and :uom >=uomFrom and :uom <=uomTo and fd.feeMatrix.financialYear.id=:financialYearId "
-                + " order by fd.id desc";
-        final List l = entityManager.createQuery(qlString).setParameter("feeMatrix", feeMatrix)
-                .setParameter("uom", uom).setParameter("financialYearId", financialYearId).getResultList();
+            Root<FeeMatrixDetail> feeMatrixDetailRoot = cq.from(FeeMatrixDetail.class);
+            List<Predicate> predicates = new ArrayList<>();
+            if (feeMatrix != null)
+                predicates.add(cb.equal(feeMatrixDetailRoot.get("feeMatrix"), feeMatrix));
+            if (uom != null) {
+                predicates.add(cb.lessThan(feeMatrixDetailRoot.get("uomFrom"), uom));
+                predicates.add(cb.greaterThanOrEqualTo(feeMatrixDetailRoot.get("uomTo"), uom));
+            }
+            cq.select(feeMatrixDetailRoot).where(predicates.toArray(new Predicate[]{}));
+            return Optional.ofNullable(entityManager.createQuery(cq).getSingleResult());
+        } catch (NoResultException e) {
+            LOGGER.error("No records found for the given feematrix obj and uom", e);
+            return Optional.empty();
 
-        if (!l.isEmpty())
-            fmd = (FeeMatrixDetail) l.get(0);
-
-        return fmd;
-
+        }
     }
 
     @Override

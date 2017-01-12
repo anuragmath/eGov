@@ -275,7 +275,7 @@ public class BudgetProposalDetailAction extends BaseBudgetDetailAction {
              validateMandatoryFields();
              budgetDetailHelper.removeEmptyBudgetDetails(budgetDetailList);
 
-             budgetDetail = budgetDetailList.get(0);
+            // budgetDetail = budgetDetailList.get(0);
              validateAmounts(budgetDetailList);
 
              Budget budget=null;

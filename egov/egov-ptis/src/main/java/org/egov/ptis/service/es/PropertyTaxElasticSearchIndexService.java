@@ -62,6 +62,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
+import org.egov.commons.CFinancialYear;
+import org.egov.commons.service.CFinancialYearService;
 import org.egov.infra.utils.DateUtils;
 import org.egov.ptis.bean.dashboard.CollectionDetails;
 import org.egov.ptis.bean.dashboard.CollectionDetailsRequest;
@@ -116,6 +118,9 @@ public class PropertyTaxElasticSearchIndexService {
     private static final Logger LOGGER = LoggerFactory.getLogger(PropertyTaxElasticSearchIndexService.class);
 
     private PropertyTaxIndexRepository propertyTaxIndexRepository;
+    
+    @Autowired
+    private CFinancialYearService cFinancialYearService;
 
     @Autowired
     private ElasticsearchTemplate elasticsearchTemplate;
@@ -165,6 +170,8 @@ public class PropertyTaxElasticSearchIndexService {
             CollectionDetails collectionIndexDetails) {
         Date fromDate;
         Date toDate;
+        CFinancialYear currFinYear = cFinancialYearService.getFinancialYearByDate(new Date());
+
         /**
          * For fetching total demand between the date ranges if dates are sent in the request, consider fromDate and toDate+1 ,
          * else calculate from current year start date till current date+1 day
@@ -174,7 +181,7 @@ public class PropertyTaxElasticSearchIndexService {
             fromDate = DateUtils.getDate(collectionDetailsRequest.getFromDate(), "yyyy-MM-dd");
             toDate = DateUtils.addDays(DateUtils.getDate(collectionDetailsRequest.getToDate(), "yyyy-MM-dd"), 1);
         } else {
-            fromDate = new DateTime().withMonthOfYear(4).dayOfMonth().withMinimumValue().toDate();
+            fromDate =DateUtils.startOfDay(currFinYear.getStartingDate());
             toDate = DateUtils.addDays(new Date(), 1);
         }
         Long startTime = System.currentTimeMillis();
@@ -221,13 +228,13 @@ public class PropertyTaxElasticSearchIndexService {
         BoolQueryBuilder boolQuery = prepareWhereClause(collectionDetailsRequest)
                 .filter(QueryBuilders.matchQuery(IS_ACTIVE, true))
                 .filter(QueryBuilders.matchQuery(IS_EXEMPTED, false));
-        if(StringUtils.isNotBlank(collectionDetailsRequest.getPropertyType())){
-            if (collectionDetailsRequest.getPropertyType().equalsIgnoreCase(DASHBOARD_PROPERTY_TYPE_CENTRAL_GOVT))
+        if (StringUtils.isNotBlank(collectionDetailsRequest.getPropertyType())) {
+            if (DASHBOARD_PROPERTY_TYPE_CENTRAL_GOVT.equalsIgnoreCase(collectionDetailsRequest.getPropertyType()))
                 boolQuery = boolQuery
-                        .filter(QueryBuilders.termsQuery("propertyType", DASHBOARD_PROPERTY_TYPE_CENTRAL_GOVT_LIST));
+                        .filter(QueryBuilders.termsQuery("consumerType", DASHBOARD_PROPERTY_TYPE_CENTRAL_GOVT_LIST));
             else
                 boolQuery = boolQuery
-                        .filter(QueryBuilders.matchQuery("propertyType", collectionDetailsRequest.getPropertyType()));
+                        .filter(QueryBuilders.matchQuery("consumerType", collectionDetailsRequest.getPropertyType()));
         }
         SearchQuery searchQueryColl = new NativeSearchQueryBuilder().withIndices(PROPERTY_TAX_INDEX_NAME)
                 .withQuery(boolQuery).addAggregation(AggregationBuilders.sum(TOTALDEMAND).field(TOTAL_DEMAND))
@@ -343,9 +350,11 @@ public class PropertyTaxElasticSearchIndexService {
     public List<TaxPayerDetails> returnUlbWiseAggregationResults(CollectionDetailsRequest collectionDetailsRequest,
             String indexName, Boolean order, String orderingAggregationName, int size, boolean isBillCollectorWise) {
         List<TaxPayerDetails> taxPayers = new ArrayList<>();
+        Map<String, BillCollectorIndex> wardWiseBillCollectors = new HashMap<>();
         BoolQueryBuilder boolQuery = prepareWhereClause(collectionDetailsRequest)
                 .filter(QueryBuilders.matchQuery(IS_ACTIVE, true))
                 .filter(QueryBuilders.matchQuery(IS_EXEMPTED, false));
+        CFinancialYear currFinYear = cFinancialYearService.getFinancialYearByDate(new Date());
 
         // orderingAggregationName is the aggregation name by which we have to
         // order the results
@@ -387,12 +396,16 @@ public class PropertyTaxElasticSearchIndexService {
             }
         });
 
+        //Fetch ward wise Bill Collector details for ward based grouping
+        if (DASHBOARD_GROUPING_WARDWISE.equalsIgnoreCase(collectionDetailsRequest.getType()))
+            wardWiseBillCollectors = collectionIndexElasticSearchService.getWardWiseBillCollectors(collectionDetailsRequest);
+
         Long timeTaken = System.currentTimeMillis() - startTime;
         LOGGER.debug("Time taken by ulbWiseAggregations is : " + timeTaken + MILLISECS);
 
         TaxPayerDetails taxDetail;
         startTime = System.currentTimeMillis();
-        Date fromDate = new DateTime().withMonthOfYear(4).dayOfMonth().withMinimumValue().toDate();
+        final Date fromDate = DateUtils.startOfDay(currFinYear.getStartingDate());
         Date toDate = DateUtils.addDays(new Date(), 1);
         Date lastYearFromDate = DateUtils.addYears(fromDate, -1);
         Date lastYearToDate = DateUtils.addYears(toDate, -1);
@@ -403,9 +416,17 @@ public class PropertyTaxElasticSearchIndexService {
             taxDetail.setDistrictName(collectionDetailsRequest.getDistrictName());
             taxDetail.setUlbGrade(collectionDetailsRequest.getUlbGrade());
             String fieldName = String.valueOf(entry.getKey());
-            if (groupingField.equals(REVENUE_WARD))
+            // If the grouping is based on ward, set the Bill Collector name and number
+            if (groupingField.equals(REVENUE_WARD)) {
                 taxDetail.setWardName(fieldName);
-            else
+                if (DASHBOARD_GROUPING_WARDWISE.equalsIgnoreCase(collectionDetailsRequest.getType())
+                        && !wardWiseBillCollectors.isEmpty()) {
+                    taxDetail.setBillCollector(wardWiseBillCollectors.get(fieldName) == null ? StringUtils.EMPTY
+                            : wardWiseBillCollectors.get(fieldName).getBillCollector());
+                    taxDetail.setMobileNumber(wardWiseBillCollectors.get(fieldName) == null ? StringUtils.EMPTY
+                            : wardWiseBillCollectors.get(fieldName).getMobileNumber());
+                }
+            } else
                 taxDetail.setUlbName(fieldName);
             // Proportional Demand = (totalDemand/12)*noOfmonths
             int noOfMonths = DateUtils.noOfMonths(fromDate, toDate) + 1;
@@ -493,7 +514,7 @@ public class PropertyTaxElasticSearchIndexService {
         for (PropertyTaxIndex property : propertyTaxRecords) {
             taxDefaulter = new TaxDefaulters();
             taxDefaulter.setOwnerName(property.getConsumerName());
-            taxDefaulter.setPropertyType(property.getPropertyType());
+            taxDefaulter.setPropertyType(property.getConsumerType());
             taxDefaulter.setUlbName(property.getCityName());
             taxDefaulter.setBalance(BigDecimal.valueOf(property.getTotalBalance()));
             taxDefaulter.setPeriod(StringUtils.isBlank(property.getDuePeriod()) ? StringUtils.EMPTY : property.getDuePeriod());

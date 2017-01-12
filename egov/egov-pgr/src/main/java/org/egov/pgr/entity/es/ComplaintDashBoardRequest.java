@@ -40,7 +40,6 @@
 
 package org.egov.pgr.entity.es;
 
-
 public class ComplaintDashBoardRequest {
 
     private String regionName;
@@ -54,14 +53,16 @@ public class ComplaintDashBoardRequest {
     private String complaintTypeCode;
     private String sortField;
     private String sortDirection;
+    private String categoryId;
     private int size;
     private String type;
+    private String localityName;
 
     public String getDistrictName() {
         return districtName;
     }
 
-    public void setDistrictName(String districtName) {
+    public void setDistrictName(final String districtName) {
         this.districtName = districtName;
     }
 
@@ -69,7 +70,7 @@ public class ComplaintDashBoardRequest {
         return ulbCode;
     }
 
-    public void setUlbCode(String ulbCode) {
+    public void setUlbCode(final String ulbCode) {
         this.ulbCode = ulbCode;
     }
 
@@ -77,7 +78,7 @@ public class ComplaintDashBoardRequest {
         return wardNo;
     }
 
-    public void setWardNo(String wardNo) {
+    public void setWardNo(final String wardNo) {
         this.wardNo = wardNo;
     }
 
@@ -85,28 +86,23 @@ public class ComplaintDashBoardRequest {
         return departmentCode;
     }
 
-    public void setDepartmentCode(String departmentCode) {
+    public void setDepartmentCode(final String departmentCode) {
         this.departmentCode = departmentCode;
     }
 
     public String getFromDate() {
-
-//		DateTimeFormatter format = DateTimeFormat.forPattern("yyyy-MM-dd");
-//		return format.parseDateTime(fromDate);
         return fromDate;
     }
 
-    public void setFromDate(String fromDate) {
+    public void setFromDate(final String fromDate) {
         this.fromDate = fromDate;
     }
 
     public String getToDate() {
-//		DateTimeFormatter format = DateTimeFormat.forPattern("yyyy-MM-dd");
-//		return format.parseDateTime(toDate);
         return toDate;
     }
 
-    public void setToDate(String toDate) {
+    public void setToDate(final String toDate) {
         this.toDate = toDate;
     }
 
@@ -114,7 +110,7 @@ public class ComplaintDashBoardRequest {
         return complaintTypeCode;
     }
 
-    public void setComplaintTypeCode(String complaintTypeCode) {
+    public void setComplaintTypeCode(final String complaintTypeCode) {
         this.complaintTypeCode = complaintTypeCode;
     }
 
@@ -122,7 +118,7 @@ public class ComplaintDashBoardRequest {
         return sortField;
     }
 
-    public void setSortField(String sortField) {
+    public void setSortField(final String sortField) {
         this.sortField = sortField;
     }
 
@@ -130,15 +126,23 @@ public class ComplaintDashBoardRequest {
         return sortDirection;
     }
 
-    public void setSortDirection(String sortDirection) {
+    public void setSortDirection(final String sortDirection) {
         this.sortDirection = sortDirection;
+    }
+
+    public String getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(final String categoryId) {
+        this.categoryId = categoryId;
     }
 
     public int getSize() {
         return size;
     }
 
-    public void setSize(int size) {
+    public void setSize(final int size) {
         this.size = size;
     }
 
@@ -146,7 +150,7 @@ public class ComplaintDashBoardRequest {
         return regionName;
     }
 
-    public void setRegionName(String regionName) {
+    public void setRegionName(final String regionName) {
         this.regionName = regionName;
     }
 
@@ -154,7 +158,7 @@ public class ComplaintDashBoardRequest {
         return ulbGrade;
     }
 
-    public void setUlbGrade(String ulbGrade) {
+    public void setUlbGrade(final String ulbGrade) {
         this.ulbGrade = ulbGrade;
     }
 
@@ -162,7 +166,15 @@ public class ComplaintDashBoardRequest {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(final String type) {
         this.type = type;
+    }
+
+    public String getLocalityName() {
+        return localityName;
+    }
+
+    public void setLocalityName(final String localityName) {
+        this.localityName = localityName;
     }
 }

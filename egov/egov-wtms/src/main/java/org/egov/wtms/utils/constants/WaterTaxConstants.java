@@ -65,6 +65,8 @@ public class WaterTaxConstants {
     public static final String EGMODULE_NAME = "Water Tax Management";
     public static final String WATERTAX_SECURITY_CHARGE = "WTAXSECURITY";
     public static final String WATERTAX_DONATION_CHARGE = "WTAXDONATION";
+    public static final String WATERTAX_ROADCUTTING_CHARGE = "WTAXROADCUTTING";
+    public static final String WATERTAX_SUPERVISION_CHARGE ="WTAXSUPERVISION";
     public static final String CONNECTION_FEE = "Connection fee";
     public static final String ADDNLCONNECTION = "ADDNLCONNECTION";
     public static final String CLOSINGCONNECTION = "CLOSINGCONNECTION";
@@ -147,7 +149,14 @@ public class WaterTaxConstants {
     public static final String WF_STATE_WORK_ORDER_GENERETED = "Work order generated";
 
     public static final String APPROVEWORKFLOWACTION = "Approve";
+    public static final String FORWARDWORKFLOWACTION = "Forward";
     public static final String SUBMITWORKFLOWACTION = "Submit";
+    public static final String  EXECUTIVEENGINEERFORWARDED="Engineer Executive Forwarded";
+    public static final String  SUPERINTENDANTENGINEERFORWARDED="Superintendent Executive Forwarded";
+
+    public static final String  EXECUTIVEENGINEERAPPROVED="Executive Engineer Approved";
+    public static final String  DIGITALSIGNATUREUPDATED="Digital Signature Updated";
+
 
     public static final String BPL_CATEGORY = "BPL";
     public static final String HIERARCHYNAME_ADMIN = "ADMINISTRATION";
@@ -261,6 +270,7 @@ public class WaterTaxConstants {
     public static final String CURRENTYEAR_FIRST_HALF = "Current 1st Half";
     public static final String CURRENTYEAR_SECOND_HALF = "Current 2nd Half";
     public static final String GLCODE_FOR_ADVANCE = "3504106";
+    public static final String [] DESG_COMM = {"Commissioner"};
 
     public static final List<String> ORDERED_DEMAND_RSNS_LIST = Arrays.asList(WATERTAXREASONCODE,
             DEMANDRSN_CODE_ADVANCE);
@@ -337,13 +347,20 @@ public class WaterTaxConstants {
     public static final String REVENUEWARDAGGREGATIONFIELD = "revenueWard";
     public static final String CITYCODEAGGREGATIONFIELD = "cityCode";
     
-    public static final String RESIDENTIALCONNECTIONTYPEFORDASHBOARD = "Residential";
+    public static final String RESIDENTIALCONNECTIONTYPEFORDASHBOARD = "RESIDENTIAL";
     
-    public static final String COMMERCIALCONNECTIONTYPEFORDASHBOARD = "Commercial";
+    
+    
+    public static final String COMMERCIALCONNECTIONTYPEFORDASHBOARD = "COMMERCIAL";
 
-
-    
-    
+    //Designation
+    public static final String COMMISSIONER_DESGN = "Commissioner";
+    public static final String EXECUTIVE_ENGINEER_DESIGN = "Executive engineer";
+    public static final String MUNICIPAL_ENGINEER_DESIGN = "Municipal Engineer";
+    public static final String SUPERIENTEND_ENGINEER_DESIGN = "Superintendent Engineer";
+    public static final String TAP_INSPPECTOR_DESIGN = "Tap Inspector";
+    public static final String ASSISTANT_ENGINEER_DESIGN = "Assistant engineer";
+    public static final String JUNIOR_OR_SENIOR_ASSISTANT_DESIGN = "Senior Assistant,Junior Assistant";
 
 
 

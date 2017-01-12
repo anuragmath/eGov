@@ -92,6 +92,10 @@ public class CreateBankService {
         return bankRepository.findByIsactive(isActive);
     }
 
+    public List<Bank> getByIsActiveTrueOrderByName() {
+        return bankRepository.findByIsactiveTrueOrderByNameAsc();
+    }
+
     @Transactional
     public Bank create(final Bank bank) {
 
@@ -137,6 +141,10 @@ public class CreateBankService {
         final TypedQuery<Bank> query = entityManager.createQuery(createQuery);
         return query.getResultList();
 
+    }
+
+    public List<Bank> getAll() {
+        return bankRepository.findAll();
     }
 
 }

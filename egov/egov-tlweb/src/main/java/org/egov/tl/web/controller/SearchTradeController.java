@@ -40,15 +40,10 @@
 
 package org.egov.tl.web.controller;
 
-import static org.egov.infra.web.utils.WebUtils.toJSON;
-
-import java.io.IOException;
-import java.util.Collections;
-
 import org.egov.tl.entity.dto.SearchForm;
 import org.egov.tl.service.LicenseStatusService;
 import org.egov.tl.service.TradeLicenseService;
-import org.egov.tl.service.masters.LicenseCategoryService;
+import org.egov.tl.service.LicenseCategoryService;
 import org.egov.tl.web.response.adaptor.SearchTradeResultHelperAdaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -57,7 +52,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+
+import static org.egov.infra.utils.JsonUtils.toJSON;
 
 @Controller
 public class SearchTradeController {
@@ -78,7 +80,7 @@ public class SearchTradeController {
 
     @RequestMapping(value = "/search/searchtrade-form", method = RequestMethod.GET)
     public String searchForm(final Model model) {
-        model.addAttribute("categoryList", licenseCategoryService.findAll());
+        model.addAttribute("categoryList", licenseCategoryService.getCategories());
         model.addAttribute("subCategoryList", Collections.emptyList());
         model.addAttribute("statusList", licenseStatusService.findAll());
         return "searchtrade-license";
@@ -91,6 +93,13 @@ public class SearchTradeController {
                 toJSON(tradeLicenseService.searchTradeLicense(searchForm), SearchForm.class,
                         SearchTradeResultHelperAdaptor.class))
                 .append("}").toString();
+    }
+    
+    @RequestMapping(value = "/search/tradeLicense",method = RequestMethod.GET, produces =MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public List<String> searchautocomplete(@RequestParam final String searchParamValue , @RequestParam final String searchParamType) {
+        return tradeLicenseService.getTradeLicenseForGivenParam(searchParamValue, searchParamType);
+                    
     }
 
 }

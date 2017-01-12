@@ -107,7 +107,7 @@ public class PropertyImpl extends StateAware implements Property {
     private BigDecimal manualAlv;
     private String occupierName;
     private Boolean isExemptedFromTax = false;
-    private TaxExeptionReason taxExemptedReason;
+    private TaxExemptionReason taxExemptedReason;
     private String docNumber;
     private Boundary areaBndry;
     private BigDecimal alv;
@@ -373,12 +373,12 @@ public class PropertyImpl extends StateAware implements Property {
     }
 
     @Override
-    public TaxExeptionReason getTaxExemptedReason() {
+    public TaxExemptionReason getTaxExemptedReason() {
         return taxExemptedReason;
     }
 
     @Override
-    public void setTaxExemptedReason(final TaxExeptionReason taxExemptedReason) {
+    public void setTaxExemptedReason(final TaxExemptionReason taxExemptedReason) {
         this.taxExemptedReason = taxExemptedReason;
     }
 
@@ -474,7 +474,7 @@ public class PropertyImpl extends StateAware implements Property {
                     getPropertyDetail().getMarketValue(), getPropertyDetail().getCategoryType(), getPropertyDetail()
 
                     .getOccupancyCertificationNo(), getPropertyDetail().isAppurtenantLandChecked(), getPropertyDetail()
-                            .isCorrAddressDiff());
+                            .isCorrAddressDiff(), getPropertyDetail().getPropertyDepartment());
 
         } else if (getPropertyDetail().getPropertyType().toString().equals(VACANT_PROPERTY)) {
             final VacantProperty vcp = (VacantProperty) getPropertyDetail();
@@ -499,7 +499,7 @@ public class PropertyImpl extends StateAware implements Property {
                             .isCable(), getPropertyDetail().getSiteOwner(), getPropertyDetail().getPattaNumber(),
                     getPropertyDetail().getCurrentCapitalValue(), getPropertyDetail().getMarketValue(),
                     getPropertyDetail().getCategoryType(), getPropertyDetail().getOccupancyCertificationNo(),
-                    getPropertyDetail().isAppurtenantLandChecked(), getPropertyDetail().isCorrAddressDiff());
+                    getPropertyDetail().isAppurtenantLandChecked(), getPropertyDetail().isCorrAddressDiff(), getPropertyDetail().getPropertyDepartment());
         }
         return propDetails;
     }

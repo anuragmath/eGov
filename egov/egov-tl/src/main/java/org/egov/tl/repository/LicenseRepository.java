@@ -40,18 +40,43 @@
 
 package org.egov.tl.repository;
 
-import org.egov.tl.entity.License;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 
-@Repository
-public interface LicenseRepository extends JpaRepository<License, Long>{
+import org.egov.tl.entity.License;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-    List<License> findByOldLicenseNumber(String oldLicenseNumber);
+@Repository
+public interface LicenseRepository extends JpaRepository<License, Long> {
+
+    License findByOldLicenseNumber(String oldLicenseNumber);
+
+    License findByOldLicenseNumberAndIdIsNot(String oldLicenseNumber, Long id);
 
     License findByLicenseNumber(String licenseNumber);
 
     License findByApplicationNumber(String applicationNumber);
+
+    @Query("select l.applicationNumber from License l where upper(l.applicationNumber) like upper('%'||:applicationNumber||'%')")
+    List<String> findByApplicationNumberLike(@Param("applicationNumber") String applicationNumber);
+
+    @Query("select l.licenseNumber from License l where upper(l.licenseNumber) like upper('%'||:licenseNumber||'%')")
+    List<String> findByLicenseNumberLike(@Param("licenseNumber") String licenseNumber);
+
+    @Query("select l.oldLicenseNumber from License l where upper(l.oldLicenseNumber) like upper('%'||:oldLicenseNumber||'%')")
+    List<String> findByOldLicenseNumberLike(@Param("oldLicenseNumber") String oldLicenseNumber);
+
+    @Query("select l.nameOfEstablishment from License l where upper(l.nameOfEstablishment) like upper('%'||:nameOfEstablishment||'%')")
+    List<String> findByNameOfEstablishmentLike(@Param("nameOfEstablishment") String nameOfEstablishment);
+
+    @Query("select l.licensee.applicantName from License l where upper(l.licensee.applicantName) like upper('%'||:applicantName||'%')")
+    List<String> findByApplicantNameLike(@Param("applicantName") String applicantName);
+
+    @Query("select l.assessmentNo from License l where upper(l.assessmentNo) like upper('%'||:assessmentNo||'%')")
+    List<String> findByAssessmentNoLike(@Param("assessmentNo") String assessmentNo);
+
+    @Query("select l.licensee.mobilePhoneNumber from License l where l.licensee.mobilePhoneNumber like '%'||:mobilePhoneNumber||'%'")
+    List<String> findByMobilePhoneNumberLike(@Param("mobilePhoneNumber") String mobilePhoneNumber);
 }

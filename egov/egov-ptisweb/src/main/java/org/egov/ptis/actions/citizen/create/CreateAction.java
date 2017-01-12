@@ -120,7 +120,7 @@ import org.egov.ptis.domain.entity.property.PropertyTypeMaster;
 import org.egov.ptis.domain.entity.property.PropertyUsage;
 import org.egov.ptis.domain.entity.property.RoofType;
 import org.egov.ptis.domain.entity.property.StructureClassification;
-import org.egov.ptis.domain.entity.property.TaxExeptionReason;
+import org.egov.ptis.domain.entity.property.TaxExemptionReason;
 import org.egov.ptis.domain.entity.property.WallType;
 import org.egov.ptis.domain.entity.property.WoodType;
 import org.egov.ptis.domain.service.property.PropertyPersistenceService;
@@ -201,6 +201,7 @@ public class CreateAction extends PropertyTaxBaseAction{
     private PropertyImpl newProperty = new PropertyImpl();
     private Address ownerAddress = new CorrespondenceAddress();
     Date propCompletionDate = null;
+    private Long propertyDepartmentId;
     
     @Autowired
     private PropertyPersistenceService basicPropertyService;
@@ -228,7 +229,7 @@ public class CreateAction extends PropertyTaxBaseAction{
         addRelatedEntity("property.propertyDetail.roofType", RoofType.class);
         addRelatedEntity("property.propertyDetail.wallType", WallType.class);
         addRelatedEntity("property.propertyDetail.woodType", WoodType.class);
-        addRelatedEntity("property.taxExemptedReason", TaxExeptionReason.class);
+        addRelatedEntity("property.taxExemptedReason", TaxExemptionReason.class);
     }
     
     @Override
@@ -275,7 +276,7 @@ public class CreateAction extends PropertyTaxBaseAction{
                 "from StructureClassification where isActive = true order by typeName ");
         final List<String> apartmentsList = getPersistenceService().findAllBy("from Apartment order by name");
         final List<String> taxExemptionReasonList = getPersistenceService().findAllBy(
-                "from TaxExeptionReason order by name");
+                "from TaxExemptionReason where isActive = true order by name");
 
         final List<Boundary> localityList = boundaryService.getActiveBoundariesByBndryTypeNameAndHierarchyTypeName(
                 LOCALITY, LOCATION_HIERARCHY_TYPE);
@@ -568,7 +569,7 @@ public class CreateAction extends PropertyTaxBaseAction{
         taxExemptionId = (taxExemptionId == null || taxExemptionId.isEmpty()) ? "-1" : taxExemptionId;
         property = propService.createProperty(property, getAreaOfPlot(), propertyMutationMaster.getCode(), propTypeId,
                 propUsageId, propOccId, status, getDocNumber(), getNonResPlotArea(), getFloorTypeId(), getRoofTypeId(),
-                getWallTypeId(), getWoodTypeId(), Long.valueOf(taxExemptionId));
+                getWallTypeId(), getWoodTypeId(), Long.valueOf(taxExemptionId), getPropertyDepartmentId());
         property.setStatus(status);
 
         LOGGER.debug("createBasicProp: Property after call to PropertyService.createProperty: " + property);
@@ -1013,5 +1014,13 @@ public class CreateAction extends PropertyTaxBaseAction{
 	public void setApplicationSource(String applicationSource) {
 		this.applicationSource = applicationSource;
 	}
+
+    public Long getPropertyDepartmentId() {
+        return propertyDepartmentId;
+    }
+
+    public void setPropertyDepartmentId(Long propertyDepartmentId) {
+        this.propertyDepartmentId = propertyDepartmentId;
+    }
 
 }

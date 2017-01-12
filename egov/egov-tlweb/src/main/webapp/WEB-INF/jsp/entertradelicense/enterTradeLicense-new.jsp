@@ -145,7 +145,7 @@
 											</div>
                                     	</div>
 	                                    <div class="tab-pane fade" id="tradeattachments">
-											<%@include file="../common/documentUpload.jsp" %>
+											<%@include file="../common/supportdocs-new.jsp" %>
 	                                    </div>
                             		</div>
                             	</div>
@@ -188,7 +188,7 @@
 					document.getElementById("mobilePhoneNumber").focus();
 					return false;
 				}
-				if (document.getElementById("oldLicenseNumber").value == '' || document.getElementById("oldLicenseNumber").value == null){
+				if (document.getElementById("oldLicenseNumber").value.trim() == '' || document.getElementById("oldLicenseNumber").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.oldlicensenumber.null" />');
 					document.getElementById("oldLicenseNumber").focus();
 					return false;
@@ -196,23 +196,23 @@
 					showMessage('enterLicense_error', '<s:text name="newlicense.dateofcreation.null" />');
 					document.getElementById("dateOfCreation").focus();
 					return false;
-				}  */else if (document.getElementById("mobilePhoneNumber").value == '' || document.getElementById("mobilePhoneNumber").value == null){
+				}  */else if (document.getElementById("mobilePhoneNumber").value.trim() == '' || document.getElementById("mobilePhoneNumber").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.mobilephonenumber.null" />');
 					document.getElementById("mobilePhoneNumber").focus();
 					return false;
-				} else if (document.getElementById("applicantName").value == '' || document.getElementById("applicantName").value == null){
+				} else if (document.getElementById("applicantName").value.trim() == '' || document.getElementById("applicantName").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.applicantname.null" />');
 					document.getElementById("applicantName").focus();
 					return false;
-				} else if (document.getElementById("fatherOrSpouseName").value == '' || document.getElementById("fatherOrSpouseName").value == null){
+				} else if (document.getElementById("fatherOrSpouseName").value.trim() == '' || document.getElementById("fatherOrSpouseName").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.fatherorspousename.null" />');
 					document.getElementById("fatherOrSpouseName").focus();
 					return false;
-				} else if (document.getElementById("emailId").value == '' || document.getElementById("emailId").value == null){
+				} else if (document.getElementById("emailId").value.trim() == '' || document.getElementById("emailId").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.email.null" />');
 					document.getElementById("emailId").focus();
 					return false;
-				} else if (document.getElementById("licenseeAddress").value == '' || document.getElementById("licenseeAddress").value == null){
+				} else if (document.getElementById("licenseeAddress").value.trim() == '' || document.getElementById("licenseeAddress").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.licenseeaddress.null" />');
 					document.getElementById("licenseeAddress").focus();
 					return false;
@@ -224,7 +224,11 @@
 					showMessage('enterLicense_error', '<s:text name="newlicense.ownershiptype.null" />');
 					document.getElementById("ownershipType").focus();
 					return false;
-				} else if (document.getElementById("address").value == '' || document.getElementById("address").value == null){
+				}else if (document.getElementById("nameOfEstablishment").value.trim() == '' || document.getElementById("nameOfEstablishment").value == null){
+                    showMessage('enterLicense_error', '<s:text name="newlicense.tradeTitle.null" />');
+                    window.scroll(0, 0);
+                    return false;
+                }  else if (document.getElementById("address").value.trim() == '' || document.getElementById("address").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.licenseaddress.null" />');
 					document.getElementById("address").focus();
 					return false;
@@ -240,7 +244,7 @@
 					showMessage('enterLicense_error', '<s:text name="newlicense.subcategory.null" />');
 					document.getElementById("subCategory").focus();
 					return false;
-				}	else if (document.getElementById("tradeArea_weight").value == '' || document.getElementById("tradeArea_weight").value == null){
+				}	else if (document.getElementById("tradeArea_weight").value.trim() == '' || document.getElementById("tradeArea_weight").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.tradeareaweight.null" />');
 					document.getElementById("tradeArea_weight").focus();
 					return false;
@@ -248,7 +252,7 @@
 					showMessage('enterLicense_error', '<s:text name="newlicense.uom.null" />');
 					document.getElementById("uom").focus();
 					return false;
-				}  else if (document.getElementById("startDate").value == '' || document.getElementById("startDate").value == null){
+				}  else if (document.getElementById("startDate").value.trim() == '' || document.getElementById("startDate").value == null){
 					showMessage('enterLicense_error', '<s:text name="newlicense.startDate.null" />');
 					window.scroll(0, 0);  
 					return false;
@@ -257,7 +261,7 @@
 							showMessage('enterLicense_error', '<s:text name="newlicense.agreementDate.null" />');
 							window.scroll(0, 0);  
 							return false;
-					 } else if(document.getElementById("agreementDocNo").value == '' || document.getElementById("agreementDocNo").value == null){
+					 } else if(document.getElementById("agreementDocNo").value.trim() == '' || document.getElementById("agreementDocNo").value == null){
 						 	showMessage('enterLicense_error', '<s:text name="newlicense.agreementDocNo.null" />');
 							window.scroll(0, 0);  
 							return false;
@@ -360,51 +364,6 @@
 				document.registrationForm.action='${pageContext.request.contextPath}/entertradelicense/enterTradeLicense-enterExisting.action';
 				document.registrationForm.submit();
   			}
-
-			// Calls propertytax REST api to retrieve property details for an assessment no
-			// url : contextpath/ptis/rest/property/assessmentno (ex: contextpath/ptis/rest/property/1085000001)
-    		function callPropertyTaxRest(){
-               	var propertyNo = jQuery("#propertyNo").val();
-            	if(propertyNo!="" && propertyNo!=null){
-					jQuery.ajax({
-						url: "/ptis/rest/property/" + propertyNo,
-						type:"GET",
-						contentType:"application/x-www-form-urlencoded",
-						success:function(data){
-							if(data.errorDetails.errorCode != null && data.errorDetails.errorCode != ''){
-								bootbox.alert(data.errorDetails.errorMessage);
-								jQuery('#propertyNo').val('');
-								jQuery('#boundary, #address').prop("disabled", false);
-							} else{
-								if(data.boundaryDetails!=null){
-									jQuery("#boundary").val(data.boundaryDetails.localityId);
-									jQuery("#zoneName").val(data.boundaryDetails.zoneName);
-									jQuery("#wardName").val(data.boundaryDetails.wardName);
-									jQuery('#parentBoundary').val(data.boundaryDetails.wardId);
-									jQuery("#address").val(data.propertyAddress);
-									jQuery("#boundaryId").val(data.boundaryDetails.localityId);
-									jQuery("#addressOnAssessment").val(data.propertyAddress);
-								}
-							}
-						},
-						error:function(e){
-							document.getElementById("propertyNo").value="";
-							resetOnPropertyNumChange();
-							bootbox.alert("Error getting property details");
-						}
-					});
-            	}
-            }
-
-    		function showHideAgreement(){
-				if(document.getElementById("showAgreementDtl").checked){
-					document.getElementById("agreementSec").style.display="";
-				} else {
-					document.getElementById("agreementSec").style.display="none";
-					document.getElementById("agreementDate").value="";
-					document.getElementById("agreementDocNo").value="";
-				}
-            } 
 
  		</script>
     </body>

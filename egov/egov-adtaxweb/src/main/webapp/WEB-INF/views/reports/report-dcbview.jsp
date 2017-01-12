@@ -191,4 +191,4 @@
 <script type="text/javascript" src="<?rnd=${app_release_no} value='/resources/global/js/jquery/plugins/datatables/responsive/js/datatables.responsive.js' context='/egi'/>"></script>
 <script src="<?rnd=${app_release_no} value='/resources/global/js/jquery/plugins/datatables/moment.min.js' context='/egi'/>"></script>
 <script src="<?rnd=${app_release_no} value='/resources/global/js/jquery/plugins/datatables/datetime-moment.js' context='/egi'/>"></script>
-<script src="<?rnd=${app_release_no} value='/resources/app/js/searchadtax.js'/>"></script>
+<script src="<?rnd=${app_release_no} value='/resources/app/js/searchadtax.js?rnd=${app_release_no}'/>"></script>

@@ -39,7 +39,7 @@
  */
 package org.egov.wtms.web.controller.reports;
 
-import static org.egov.infra.web.utils.WebUtils.toJSON;
+import static org.egov.infra.utils.JsonUtils.toJSON;
 import static org.egov.ptis.constants.PropertyTaxConstants.REVENUE_HIERARCHY_TYPE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
@@ -63,6 +63,7 @@ import org.egov.wtms.application.entity.DefaultersReport;
 import org.egov.wtms.application.service.ConnectionDemandService;
 import org.egov.wtms.application.service.DefaultersWTReportService;
 import org.egov.wtms.application.service.WaterConnectionDetailsService;
+import org.egov.wtms.reports.entity.DefaultersReportAdaptor;
 import org.egov.wtms.utils.DemandComparatorByInstallmentOrder;
 import org.egov.wtms.utils.constants.WaterTaxConstants;
 import org.springframework.beans.factory.annotation.Autowired;

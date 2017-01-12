@@ -60,6 +60,13 @@ public class CollTableData {
     private BigDecimal performance = BigDecimal.ZERO;
     private BigDecimal cytdBalDmd = BigDecimal.ZERO;
     private BigDecimal lytdColl = BigDecimal.ZERO;
+    private BigDecimal arrearColl = BigDecimal.ZERO;
+    private BigDecimal currentColl = BigDecimal.ZERO;
+    private BigDecimal interestColl = BigDecimal.ZERO;
+    private BigDecimal arrearDemand = BigDecimal.ZERO;
+    private BigDecimal currentDemand = BigDecimal.ZERO;
+    private BigDecimal proportionalArrearDemand = BigDecimal.ZERO;
+    private BigDecimal proportionalCurrentDemand = BigDecimal.ZERO;
     private BigDecimal lyVar = BigDecimal.ZERO;
 
     public String getRegionName() {
@@ -181,4 +188,61 @@ public class CollTableData {
     public void setMobileNumber(String mobileNumber) {
         this.mobileNumber = mobileNumber;
     }
+
+    public BigDecimal getArrearColl() {
+        return arrearColl;
+    }
+
+    public void setArrearColl(BigDecimal arrearColl) {
+        this.arrearColl = arrearColl;
+    }
+
+    public BigDecimal getCurrentColl() {
+        return currentColl;
+    }
+
+    public void setCurrentColl(BigDecimal currentColl) {
+        this.currentColl = currentColl;
+    }
+
+    public BigDecimal getInterestColl() {
+        return interestColl;
+    }
+
+    public void setInterestColl(BigDecimal interestColl) {
+        this.interestColl = interestColl;
+    }
+
+    public BigDecimal getArrearDemand() {
+        return arrearDemand;
+    }
+
+    public void setArrearDemand(BigDecimal arrearDemand) {
+        this.arrearDemand = arrearDemand;
+    }
+
+    public BigDecimal getCurrentDemand() {
+        return currentDemand;
+    }
+
+    public void setCurrentDemand(BigDecimal currentDemand) {
+        this.currentDemand = currentDemand;
+    }
+
+    public BigDecimal getProportionalArrearDemand() {
+        return proportionalArrearDemand;
+    }
+
+    public void setProportionalArrearDemand(BigDecimal proportionalArrearDemand) {
+        this.proportionalArrearDemand = proportionalArrearDemand;
+    }
+
+    public BigDecimal getProportionalCurrentDemand() {
+        return proportionalCurrentDemand;
+    }
+
+    public void setProportionalCurrentDemand(BigDecimal proportionalCurrentDemand) {
+        this.proportionalCurrentDemand = proportionalCurrentDemand;
+    }
+
 }

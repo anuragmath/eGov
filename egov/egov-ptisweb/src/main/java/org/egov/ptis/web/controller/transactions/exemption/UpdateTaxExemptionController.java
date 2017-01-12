@@ -40,16 +40,40 @@
 
 package org.egov.ptis.web.controller.transactions.exemption;
 
+import static org.egov.ptis.constants.PropertyTaxConstants.COMMISSIONER_DESGN;
+import static org.egov.ptis.constants.PropertyTaxConstants.EXEMPTION;
+import static org.egov.ptis.constants.PropertyTaxConstants.NOTICE_TYPE_EXEMPTION;
+import static org.egov.ptis.constants.PropertyTaxConstants.QUERY_PROPERTYIMPL_BYID;
+import static org.egov.ptis.constants.PropertyTaxConstants.QUERY_WORKFLOW_PROPERTYIMPL_BYID;
+import static org.egov.ptis.constants.PropertyTaxConstants.STATUS_ISACTIVE;
+import static org.egov.ptis.constants.PropertyTaxConstants.STATUS_ISHISTORY;
+import static org.egov.ptis.constants.PropertyTaxConstants.STATUS_REJECTED;
+import static org.egov.ptis.constants.PropertyTaxConstants.STATUS_WORKFLOW;
+import static org.egov.ptis.constants.PropertyTaxConstants.WFLOW_ACTION_NEW;
+import static org.egov.ptis.constants.PropertyTaxConstants.WFLOW_ACTION_STEP_APPROVE;
+import static org.egov.ptis.constants.PropertyTaxConstants.WFLOW_ACTION_STEP_NOTICE_GENERATE;
+import static org.egov.ptis.constants.PropertyTaxConstants.WFLOW_ACTION_STEP_PREVIEW;
+import static org.egov.ptis.constants.PropertyTaxConstants.WFLOW_ACTION_STEP_REJECT;
+import static org.egov.ptis.constants.PropertyTaxConstants.WFLOW_ACTION_STEP_SIGN;
+import static org.egov.ptis.constants.PropertyTaxConstants.WF_STATE_REJECTED;
+import static org.egov.ptis.constants.PropertyTaxConstants.WF_STATE_UD_REVENUE_INSPECTOR_APPROVAL_PENDING;
+
+import java.util.Collections;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+
 import org.egov.eis.entity.Assignment;
 import org.egov.eis.service.AssignmentService;
 import org.egov.eis.web.contract.WorkflowContainer;
 import org.egov.eis.web.controller.workflow.GenericWorkFlowController;
 import org.egov.infra.security.utils.SecurityUtils;
+import org.egov.infra.workflow.entity.StateHistory;
 import org.egov.ptis.client.util.PropertyTaxUtil;
-import org.egov.ptis.domain.dao.demand.PtDemandDao;
 import org.egov.ptis.domain.entity.property.Property;
 import org.egov.ptis.domain.entity.property.PropertyImpl;
-import org.egov.ptis.domain.entity.property.TaxExeptionReason;
+import org.egov.ptis.domain.entity.property.TaxExemptionReason;
 import org.egov.ptis.domain.service.exemption.TaxExemptionService;
 import org.egov.ptis.service.utils.PropertyTaxCommonUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,78 +87,80 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
-import java.util.List;
-
-import static org.egov.ptis.constants.PropertyTaxConstants.*;
-
 @Controller
 @RequestMapping(value = "/exemption/update/{id}")
 public class UpdateTaxExemptionController extends GenericWorkFlowController {
 
+    private static final String APPROVAL_POSITION = "approvalPosition";
     protected static final String TAX_EXEMPTION_FORM = "taxExemption-form";
     protected static final String TAX_EXEMPTION_SUCCESS = "taxExemption-success";
     protected static final String TAX_EXEMPTION_VIEW = "taxExemption-view";
     public static final String EDIT = "edit";
     public static final String VIEW = "view";
 
-    private TaxExemptionService taxExemptionService;
+    private final TaxExemptionService taxExemptionService;
 
     @Autowired
-    public UpdateTaxExemptionController(TaxExemptionService taxExemptionService) {
+    public UpdateTaxExemptionController(final TaxExemptionService taxExemptionService) {
         this.taxExemptionService = taxExemptionService;
     }
 
     private PropertyImpl property;
     private Boolean isExempted = Boolean.FALSE;
-    
-    @Autowired
-    private PtDemandDao ptDemandDAO;
 
     @Autowired
     private PropertyTaxUtil propertyTaxUtil;
 
     @Autowired
     private SecurityUtils securityUtils;
-    
+
     @Autowired
     protected AssignmentService assignmentService;
-    
+
     @Autowired
     private PropertyTaxCommonUtils propertyTaxCommonUtils;
 
     @ModelAttribute
-    public Property propertyModel(@PathVariable String id) {
+    public Property propertyModel(@PathVariable final String id) {
         property = taxExemptionService.findByNamedQuery(QUERY_WORKFLOW_PROPERTYIMPL_BYID, Long.valueOf(id));
-        if (property == null) {
+        if (property == null)
             property = taxExemptionService.findByNamedQuery(QUERY_PROPERTYIMPL_BYID, Long.valueOf(id));
-        }
         return property;
     }
 
     @SuppressWarnings("unchecked")
     @ModelAttribute("taxExemptionReasons")
-    public List<TaxExeptionReason> getTaxExemptionReasons() {
-        return taxExemptionService.getSession().createQuery("from TaxExeptionReason order by name").list();
+    public List<TaxExemptionReason> getTaxExemptionReasons() {
+        return taxExemptionService.getSession().createQuery("from TaxExemptionReason where isActive = true order by name").list();
     }
 
     @RequestMapping(method = RequestMethod.GET)
     public String view(final Model model, @PathVariable final Long id, final HttpServletRequest request) {
-        isExempted=property.getBasicProperty().getActiveProperty().getIsExemptedFromTax();
+        isExempted = property.getBasicProperty().getActiveProperty().getIsExemptedFromTax();
         String userDesignationList = "";
         final String currState = property.getState().getValue();
         final String nextAction = property.getState().getNextAction();
-        userDesignationList=propertyTaxCommonUtils.getAllDesignationsForUser(securityUtils.getCurrentUser().getId());
+        userDesignationList = propertyTaxCommonUtils.getAllDesignationsForUser(securityUtils.getCurrentUser().getId());
         model.addAttribute("stateType", property.getClass().getSimpleName());
         model.addAttribute("currentState", property.getCurrentState().getValue());
-        prepareWorkflow(model, property, new WorkflowContainer());
+        final WorkflowContainer workflowContainer = new WorkflowContainer();
+        workflowContainer.setPendingActions(nextAction);
+        workflowContainer.setAdditionalRule(EXEMPTION);
+        prepareWorkflow(model, property, workflowContainer);
         model.addAttribute("userDesignationList", userDesignationList);
         model.addAttribute("designation", COMMISSIONER_DESGN);
-        model.addAttribute("isExempted",isExempted);
+        model.addAttribute("isExempted", isExempted);
+        model.addAttribute("pendingActions", nextAction);
+        model.addAttribute("additionalRule", EXEMPTION);
+        final String currentDesignation = taxExemptionService.getLoggedInUserDesignation(
+                property.getCurrentState().getOwnerPosition().getId(),
+                securityUtils.getCurrentUser());
+        if (!(currState.endsWith(STATUS_REJECTED) || currState.endsWith(WFLOW_ACTION_NEW)))
+            model.addAttribute("currentDesignation", currentDesignation);
+
         taxExemptionService.addModelAttributes(model, property.getBasicProperty());
         if (currState.endsWith(WF_STATE_REJECTED) || nextAction.equalsIgnoreCase(WF_STATE_UD_REVENUE_INSPECTOR_APPROVAL_PENDING)
-                || currState.endsWith(WFLOW_ACTION_NEW)) { 
+                || currState.endsWith(WFLOW_ACTION_NEW)) {
             model.addAttribute("mode", EDIT);
             return TAX_EXEMPTION_FORM;
         } else {
@@ -144,7 +170,7 @@ public class UpdateTaxExemptionController extends GenericWorkFlowController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public String update(@Valid @ModelAttribute Property property, final BindingResult errors,
+    public String update(@Valid @ModelAttribute final Property property, final BindingResult errors,
             final RedirectAttributes redirectAttributes, final HttpServletRequest request, final Model model,
             @RequestParam String workFlowAction) {
 
@@ -153,30 +179,33 @@ public class UpdateTaxExemptionController extends GenericWorkFlowController {
         String approvalComent = "";
         String taxExemptedReason = "";
 
-        Property oldProperty = (PropertyImpl) property.getBasicProperty().getActiveProperty();
+        final Property oldProperty = property.getBasicProperty().getActiveProperty();
 
         if (request.getParameter("approvalComent") != null)
             approvalComent = request.getParameter("approvalComent");
         if (request.getParameter("workFlowAction") != null)
             workFlowAction = request.getParameter("workFlowAction");
-        if (request.getParameter("approvalPosition") != null && !request.getParameter("approvalPosition").isEmpty())
-            approvalPosition = Long.valueOf(request.getParameter("approvalPosition"));
-        Boolean propertyByEmployee = Boolean.valueOf(request.getParameter("propertyByEmployee"));
+        if (request.getParameter(APPROVAL_POSITION) != null && !request.getParameter(APPROVAL_POSITION).isEmpty())
+            approvalPosition = Long.valueOf(request.getParameter(APPROVAL_POSITION));
+        final Boolean propertyByEmployee = Boolean.valueOf(request.getParameter("propertyByEmployee"));
         if (workFlowAction.equalsIgnoreCase(WFLOW_ACTION_STEP_APPROVE)) {
             property.setStatus(STATUS_ISACTIVE);
             oldProperty.setStatus(STATUS_ISHISTORY);
         }
+        final String exemptioReason = property.getTaxExemptedReason().getCode();
+        if (workFlowAction.equalsIgnoreCase(WFLOW_ACTION_STEP_NOTICE_GENERATE) ||
+                WFLOW_ACTION_STEP_PREVIEW.equalsIgnoreCase(workFlowAction) ||
+                WFLOW_ACTION_STEP_SIGN.equalsIgnoreCase(workFlowAction))
+            return "redirect:/notice/propertyTaxNotice-generateExemptionNotice.action?basicPropId="
+                    + property.getBasicProperty().getId() + "&noticeType=" + NOTICE_TYPE_EXEMPTION
+                    + "&noticeMode=" + NOTICE_TYPE_EXEMPTION + "&actionType=" + workFlowAction + "&exemptionReason="
+                    + exemptioReason;
+        else {
 
-        if (workFlowAction.equalsIgnoreCase(WFLOW_ACTION_STEP_NOTICE_GENERATE)) {
-            return "redirect:/notice/propertyTaxNotice-generateSpecialNotice.action?basicPropId="
-                    + property.getBasicProperty().getId() + "&noticeType=" + NOTICE_TYPE_SPECIAL_NOTICE
-                    + "&noticeMode=" + APPLICATION_TYPE_TAX_EXEMTION;
-        } else {
-
-            if (request.getParameter("mode").equalsIgnoreCase(VIEW)) {
+            if (request.getParameter("mode").equalsIgnoreCase(VIEW))
                 taxExemptionService.updateProperty(property, approvalComent, workFlowAction, approvalPosition,
                         propertyByEmployee, EXEMPTION);
-            } else {
+            else {
                 if (request.getParameter("taxExemptedReason") != null)
                     taxExemptedReason = request.getParameter("taxExemptedReason");
                 taxExemptionService.saveProperty(property, oldProperty, status, approvalComent, workFlowAction,
@@ -184,31 +213,28 @@ public class UpdateTaxExemptionController extends GenericWorkFlowController {
             }
             String successMessage = "";
             Assignment assignment = new Assignment();
-            if(property!=null && property.getCreatedBy()!=null){
+            if (property != null && property.getCreatedBy() != null)
                 assignment = assignmentService.getPrimaryAssignmentForUser(property.getCreatedBy().getId());
-            }
-            if (workFlowAction.equalsIgnoreCase(WFLOW_ACTION_STEP_APPROVE)) {
-                if (taxExemptionService.isPropertyByEmployee(property)) {
-                    successMessage = "Property Exemption approved successfully and forwarded to  "
-                            + assignment.getEmployee().getName().concat("~").concat(assignment.getPosition().getName()) + " with assessment number "
-                            + property.getBasicProperty().getUpicNo();
-                } else {
-                    successMessage = "Property Exemption approved successfully and forwarded to  "
-                            + propertyTaxUtil.getApproverUserName(((PropertyImpl) property).getStateHistory().get(0)
-                                    .getOwnerPosition().getId()) + " with assessment number "
-                            + property.getBasicProperty().getUpicNo();
-                }
-            } else if (workFlowAction.equalsIgnoreCase(WFLOW_ACTION_STEP_REJECT)) {
-                if (taxExemptionService.isPropertyByEmployee(property)) {
-                    successMessage = "Property Exemption rejected successfully and forwared to initiator "
-                            + assignment.getEmployee().getName().concat("~").concat(assignment.getPosition().getName()) + " with application number "
-                            + property.getApplicationNo();
-                } else {
-                    successMessage = "Property Exemption rejected successfully and forwared to initiator "
-                            + propertyTaxUtil.getApproverUserName(((PropertyImpl) property).getStateHistory().get(0)
-                                    .getOwnerPosition().getId()) + " with application number "
-                            + property.getApplicationNo();
-                }
+            if (workFlowAction.equalsIgnoreCase(WFLOW_ACTION_STEP_APPROVE))
+                successMessage = "Property Exemption approved successfully and forwarded to "
+                        + propertyTaxUtil.getApproverUserName(((PropertyImpl) property).getState().getOwnerPosition().getId())
+                        + " with assessment number "
+                        + property.getBasicProperty().getUpicNo();
+            else if (workFlowAction.equalsIgnoreCase(WFLOW_ACTION_STEP_REJECT)) {
+                final PropertyImpl propertyImpl = (PropertyImpl) property;
+                final List<StateHistory> history = propertyImpl.getStateHistory();
+                Collections.reverse(history);
+                final String designation = taxExemptionService.getLoggedInUserDesignation(
+                        history.get(0).getOwnerPosition().getId(),
+                        securityUtils.getCurrentUser());
+                assignment = taxExemptionService.getUserAssignmentOnReject(designation, (PropertyImpl) property);
+                if (assignment == null)
+                    assignment = taxExemptionService.getWfInitiator((PropertyImpl) property);
+
+                successMessage = "Property Exemption rejected successfully and forwared to "
+                        + assignment.getEmployee().getName().concat("~").concat(assignment.getPosition().getName())
+                        + " with application number "
+                        + property.getApplicationNo();
             } else
                 successMessage = "Successfully forwarded to " + propertyTaxUtil.getApproverUserName(approvalPosition)
                         + " with application number " + property.getApplicationNo();

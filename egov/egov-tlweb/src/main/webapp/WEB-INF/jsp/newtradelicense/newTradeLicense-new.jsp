@@ -48,23 +48,23 @@
 		
 		function validateLicenseForm(obj) {
 				var adhaar = document.getElementById('adhaarId').value;
-				if (document.getElementById("mobilePhoneNumber").value == '' || document.getElementById("mobilePhoneNumber").value == null){
+				if (document.getElementById("mobilePhoneNumber").value.trim() == '' || document.getElementById("mobilePhoneNumber").value == null){
 					showMessage('newLicense_error', '<s:text name="newlicense.mobilephonenumber.null" />');
 					window.scroll(0, 0); 
 					return false;
-				} else if (document.getElementById("applicantName").value == '' || document.getElementById("applicantName").value == null){
+				} else if (document.getElementById("applicantName").value.trim() == '' || document.getElementById("applicantName").value == null){
 					showMessage('newLicense_error', '<s:text name="newlicense.applicantname.null" />');
 					window.scroll(0, 0); 
 					return false;
-				} else if (document.getElementById("fatherOrSpouseName").value == '' || document.getElementById("fatherOrSpouseName").value == null){
+				} else if (document.getElementById("fatherOrSpouseName").value.trim() == '' || document.getElementById("fatherOrSpouseName").value == null){
 					showMessage('newLicense_error', '<s:text name="newlicense.fatherorspousename.null" />');
 					window.scroll(0, 0); 
 					return false;
-				} else if (document.getElementById("emailId").value == '' || document.getElementById("emailId").value == null){
+				} else if (document.getElementById("emailId").value.trim() == '' || document.getElementById("emailId").value == null){
 					showMessage('newLicense_error', '<s:text name="newlicense.email.null" />');
 					window.scroll(0, 0);
 					return false;
-				} else if (document.getElementById("licenseeAddress").value == '' || document.getElementById("licenseeAddress").value == null){
+				} else if (document.getElementById("licenseeAddress").value.trim() == '' || document.getElementById("licenseeAddress").value == null){
 					showMessage('newLicense_error', '<s:text name="newlicense.licenseeaddress.null" />');
 					window.scroll(0, 0); 
 					return false;
@@ -76,12 +76,12 @@
 					showMessage('newLicense_error', '<s:text name="newlicense.ownershiptype.null" />');
 					window.scroll(0, 0); 
 					return false;
-				}else if (document.getElementById("nameOfEstablishment").value == '' || document.getElementById("nameOfEstablishment").value == null){
+				}else if (document.getElementById("nameOfEstablishment").value.trim() == '' || document.getElementById("nameOfEstablishment").value == null){
 					showMessage('newLicense_error', '<s:text name="newlicense.tradeTitle.null" />');
 					window.scroll(0, 0); 
 					return false;
 				}  
-				else if (document.getElementById("address").value == '' || document.getElementById("address").value == null){
+				else if (document.getElementById("address").value.trim() == '' || document.getElementById("address").value == null){
 					showMessage('newLicense_error', '<s:text name="newlicense.licenseaddress.null" />');
 					window.scroll(0, 0);
 					return false;
@@ -114,7 +114,7 @@
 							showMessage('newLicense_error', '<s:text name="newlicense.agreementDate.null" />');
 							window.scroll(0, 0);  
 							return false;
-					 } else if(document.getElementById("agreementDocNo").value == '' || document.getElementById("agreementDocNo").value == null){
+					 } else if(document.getElementById("agreementDocNo").value.trim() == '' || document.getElementById("agreementDocNo").value == null){
 						 	showMessage('newLicense_error', '<s:text name="newlicense.agreementDocNo.null" />');
 							window.scroll(0, 0);  
 							return false;
@@ -168,8 +168,10 @@
 					  	jQuery('#workflowCommentsDiv label').text('<s:text name="newlicense.fieldInspection.label" />');
 					 	 jQuery('#workflowCommentsDiv label').append('<span class="mandatory"></span>');
 					</s:if>
+					document.getElementById("btncancel").disabled=false;
+					document.getElementById("closebn").disabled =false;
 					document.getElementById('workflowDiv').style.visibility = 'hidden';
-					
+
 				} 
 				if(document.getElementById("mode").value=='view'|| document.getElementById("mode").value=='editForReject'){
 					 
@@ -208,14 +210,6 @@
 				if(currentState == 'License Created' || currentState=='Commissioner approved')
 					document.getElementById('closeDiv').hidden = false;
 			}
-			
-			function formatCurrency(obj) {
-       			if(obj.value=="") {
-
-        		} else {
-            		obj.value=(parseFloat(obj.value)).toFixed(2);
-       			}
-    		}
 
 			function onSubmitValidations() {
     			return validateLicenseForm(this);
@@ -226,6 +220,12 @@
 					return false;
 				}
   			}
+			function onCancelSubmit() {
+				document.getElementById("workFlowAction").disabled=false;
+				document.getElementById("workFlowAction").value="Reject";
+				document.newTradeLicense.action='${pageContext.request.contextPath}/newtradelicense/newTradeLicense-approve.action';
+				return true;
+			}
     		function onSubmit() {
         		var mode=document.getElementById("mode").value;
         		var workflowaction = document.getElementById("workFlowAction").value;
@@ -236,87 +236,27 @@
 					clearMessage('newLicense_error');
 					toggleFields(false,"");
 					document.newTradeLicense.action='${pageContext.request.contextPath}/newtradelicense/newTradeLicense-approve.action';
-					//document.newTradeLicense.submit();
 				</s:if>
 				<s:elseif  test="%{mode!=null && mode=='editForReject'}">
 				clearMessage('newLicense_error');
 				toggleFields(false,"");
 				document.newTradeLicense.action='${pageContext.request.contextPath}/newtradelicense/newTradeLicense-approve.action';
-				//document.newTradeLicense.submit();
 			</s:elseif>
 				<s:elseif test="%{mode!=null && mode=='edit'}">
 					clearMessage('newLicense_error');
 					toggleFields(false,"");
-					document.newTradeLicense.action = '${pageContext.request.contextPath}//newtradelicense/editTradeLicense-edit.action';
-					//document.newTradeLicense.submit();
+					document.newTradeLicense.action = '${pageContext.request.contextPath}/newtradelicense/editTradeLicense-edit.action';
 				</s:elseif>
 				<s:else>   
 					clearMessage('newLicense_error'); 
 					toggleFields(false,"");
 	    			document.newTradeLicense.action='${pageContext.request.contextPath}/newtradelicense/newTradeLicense-create.action';
-			    	//document.newTradeLicense.submit();
 				</s:else>
 
 				return true;
         	} 
 
-			// Calls propertytax REST api to retrieve property details for an assessment no
-			// url : contextpath/ptis/rest/property/assessmentno (ex: contextpath/ptis/rest/property/1085000001)
-    		function callPropertyTaxRest(){
-               	var propertyNo = jQuery("#propertyNo").val();
-            	if(propertyNo!="" && propertyNo!=null){
-					jQuery.ajax({
-						url: "/ptis/rest/property/" + propertyNo,
-						type:"GET",
-						contentType:"application/x-www-form-urlencoded",
-						success:function(data){
-							if(data.errorDetails.errorCode != null && data.errorDetails.errorCode != ''){
-								bootbox.alert(data.errorDetails.errorMessage);
-								jQuery('#propertyNo').val('');
-								jQuery('#boundary, #address').prop("disabled", false);
-							} else{
-								if(data.boundaryDetails!=null){
-									jQuery("#boundary").val(data.boundaryDetails.localityId);
-									jQuery("#wardName").val(data.boundaryDetails.wardName);
-									jQuery('#parentBoundary').val(data.boundaryDetails.wardId);
-									jQuery("#address").val(data.propertyAddress);
-									jQuery("#boundaryId").val(data.boundaryDetails.localityId);
-									jQuery("#addressOnAssessment").val(data.propertyAddress);
-								}
-							}
-						},
-						error:function(e){
-							document.getElementById("propertyNo").value="";
-							resetOnPropertyNumChange();
-							bootbox.alert("Error getting property details");
-						}
-					});
-            	}
-            }
 
-            function resetOnPropertyNumChange(){
-            	var propertyNo = jQuery("#propertyNo").val();
-               	if(propertyNo!="" && propertyNo!=null){
-            		document.getElementById("address").disabled="true";
-	            	document.getElementById("boundary").disabled="true"; 
-            	} else {
-                    document.getElementById("address").disabled=false;
-	            	document.getElementById("boundary").disabled=false;  
-                }
-            	document.getElementById("boundary").value='-1'; 
-              	document.getElementById("wardName").value="";
-            	document.getElementById("address").value="";
-            }
-
-            function showHideAgreement(){
-				if(document.getElementById("showAgreementDtl").checked){
-					document.getElementById("agreementSec").style.display="";
-				} else {
-					document.getElementById("agreementSec").style.display="none";
-					document.getElementById("agreementDate").value="";
-					document.getElementById("agreementDocNo").value="";
-				}
-            } 
         	
  		</script>
  		
@@ -370,7 +310,12 @@
 							</s:if>
 							<s:else>
 								<div class="panel-title" style="text-align:center">
-										<s:text name='newtradeLicense.heading' /> 
+                                    <s:if test="%{licenseAppType.name=='Renew'}">
+										<s:text name='renewtradeLicense.heading' />
+                                    </s:if>
+                                    <s:else>
+                                        <s:text name='newtradeLicense.heading' />
+                                    </s:else>
 								</div>
 							</s:else>
                             
@@ -388,21 +333,30 @@
 	                                         <%@ include file='../common/license.jsp'%>
 									</div>
                                     <div class="tab-pane fade" id="tradeattachments">
-                                    	<%@include file="../common/documentUpload.jsp" %>
+                                    	<%@include file="../common/supportdocs-new.jsp" %>
                                     </div>
                                 </div>
                             </div>
                         </div> 
                         <div style="text-align: center;" hidden="true" id="closeDiv">
-	                    <input type="button" name="closeBtn" id="closeBtn" value="Close" 
+	                    <input type="button" name="closeBtn" id="closeBtn" value="Close"
 							class="button" onclick="window.close();" style="margin:0 5px"/>
 						</div>
-						<s:if test="%{state!=null}">
+						<s:if test="%{state!=null && state.value !='License Created'}">
 	                        <div class="panel panel-primary" id="workflowDiv" >
 	                        	<%@ include file='../common/commonWorkflowMatrix.jsp'%>
 								<%@ include file='../common/commonWorkflowMatrix-button.jsp'%>
 							</div>
 						</s:if>
+						<s:elseif test="%{state!=null && state.value=='License Created'}">
+							<div class="text-center">
+								<s:hidden id="workFlowAction" name="workFlowAction"/>
+								<button type="submit" id="btncancel" class="btn btn-primary" onclick="return onCancelSubmit();">
+									Cancel</button>
+								<button type="button" id="closebn" class="btn btn-default" onclick="window.close();">
+									Close</button>
+							</div>
+						</s:elseif>
 						<s:else>
 							<div class="row">
 								<div class="text-center">

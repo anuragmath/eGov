@@ -251,7 +251,7 @@ function showInstrumentDetails(obj){
 			name="paytradiobutton" value="dd" /> DD &nbsp;
 	</span> <span style="float: left;" id="cardradiobuttonspan"> <input
 			onClick="showInstrumentDetails(this)" type="radio" align="absmiddle"
-			id="cardradiobutton" name="paytradiobutton" /> Credit card &nbsp;
+			id="cardradiobutton" name="paytradiobutton" /> Credit/Debit card &nbsp;
 	</span> <span style="float: left;" id="bankradiobuttonspan"> <input
 			onClick="showInstrumentDetails(this)" type="radio" align="absmiddle"
 			id="bankradiobutton" name="paytradiobutton" /> Direct Bank &nbsp;
@@ -314,7 +314,7 @@ function showInstrumentDetails(obj){
 									class="mandatory1">*</span></td>
 								<td class="bluebox"><s:textfield id="bankName" type="text"
 										name="instrumentProxyList[0].bankId.name"
-										onkeyup='autocompletecodeBank(this,event)'
+										onfocus='autocompletecodeBank(this,event)'
 										onblur='fillAfterSplitBank(this)' /> <s:hidden id="bankID"
 										name="instrumentProxyList[0].bankId.id" />
 									<div id="bankcodescontainer"></div></td>

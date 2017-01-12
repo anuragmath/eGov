@@ -78,7 +78,7 @@
 		<style>
 		body{padding:0;}
 		footer {
-			background-color:#f3f4f5;bottom: 0;clear:both;position: fixed;width:100%;z-index: 9999;
+			background-color:#f3f4f5;bottom: 0;clear:both;position: fixed;width:100%;z-index: 999;
 		}
 		
 		footer a{
@@ -399,6 +399,7 @@
 								<div class="col-md-8 add-margin">
 									<input type="password" class="form-control check-password" id="retype-pass" maxlength="32">
 									<div class="password-error error-msg display-hide">Password is incorrect</div>
+									<div class="password-error-msg display-hide">${pwdmsg}</div>
 								</div>
 							</div>
 							<div class="form-group text-right">

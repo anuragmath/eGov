@@ -117,24 +117,16 @@ public class EstimationNoticeController {
                 ownerName = names.getOwnerName();
                 break;
             }
-
-            if (WaterTaxConstants.NEWCONNECTION.equalsIgnoreCase(waterConnectionDetails.getApplicationType().getCode()))
-                reportParams.put("applicationType",
-                        WordUtils.capitalize(waterConnectionDetails.getApplicationType().getName()).toString());
-            else if (WaterTaxConstants.ADDNLCONNECTION.equalsIgnoreCase(waterConnectionDetails.getApplicationType().getCode()))
-                reportParams.put("applicationType",
-                        WordUtils.capitalize(waterConnectionDetails.getApplicationType().getName()).toString());
-            else
                 reportParams.put("applicationType",
                         WordUtils.capitalize(waterConnectionDetails.getApplicationType().getName()).toString());
             reportParams.put("cityName", session.getAttribute("citymunicipalityname"));
             reportParams.put("district", session.getAttribute("districtName"));
             reportParams.put("estimationDate",
                     formatter.format(waterConnectionDetails.getFieldInspectionDetails().getCreatedDate()));
-            reportParams.put("estimationCharges", waterConnectionDetails.getFieldInspectionDetails().getEstimationCharges());
             reportParams.put("estimationNumber", waterConnectionDetails.getEstimationNumber());
             reportParams.put("donationCharges", waterConnectionDetails.getDonationCharges());
-            totalCharges = waterConnectionDetails.getDonationCharges()+ waterConnectionDetails.getFieldInspectionDetails().getEstimationCharges();
+            totalCharges = waterConnectionDetails.getDonationCharges()+waterConnectionDetails.getFieldInspectionDetails().getSupervisionCharges()+
+                    waterConnectionDetails.getFieldInspectionDetails().getRoadCuttingCharges()+waterConnectionDetails.getFieldInspectionDetails().getSecurityDeposit();
             reportParams.put("totalCharges",totalCharges);
             reportParams.put("applicationDate", formatter.format(waterConnectionDetails.getApplicationDate()));
             reportParams.put("applicantName", ownerName);
@@ -142,6 +134,9 @@ public class EstimationNoticeController {
             reportParams.put("houseNo", doorNo[0]);
             reportParams.put("propertyID", waterConnectionDetails.getConnection().getPropertyIdentifier());
             reportParams.put("amountInWords", getTotalAmntInWords(totalCharges));
+            reportParams.put("securityDeposit", waterConnectionDetails.getFieldInspectionDetails().getSecurityDeposit());
+            reportParams.put("roadCuttingCharges", waterConnectionDetails.getFieldInspectionDetails().getRoadCuttingCharges());
+            reportParams.put("superVisionCharges", waterConnectionDetails.getFieldInspectionDetails().getSupervisionCharges());
             reportInput = new ReportRequest(ESTIMATION_NOTICE, waterConnectionDetails, reportParams);
         }
         final HttpHeaders headers = new HttpHeaders();

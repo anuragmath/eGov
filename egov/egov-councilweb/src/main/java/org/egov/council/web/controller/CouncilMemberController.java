@@ -1,6 +1,6 @@
 package org.egov.council.web.controller;
 
-import static org.egov.infra.web.utils.WebUtils.toJSON;
+import static org.egov.infra.utils.JsonUtils.toJSON;
 
 import java.io.IOException;
 import java.util.List;
@@ -9,14 +9,15 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.apache.log4j.Logger;
+import org.egov.commons.service.EducationalQualificationService;
 import org.egov.council.entity.CouncilMember;
 import org.egov.council.entity.CouncilMemberStatus;
 import org.egov.council.service.CouncilCasteService;
 import org.egov.council.service.CouncilDesignationService;
 import org.egov.council.service.CouncilMemberService;
 import org.egov.council.service.CouncilPartyService;
-import org.egov.council.service.CouncilQualificationService;
 import org.egov.council.service.es.CouncilMemberIndexService;
+import org.egov.council.utils.constants.CouncilConstants;
 import org.egov.council.web.adaptor.CouncilMemberJsonAdaptor;
 import org.egov.infra.admin.master.service.BoundaryService;
 import org.egov.infra.filestore.service.FileStoreService;
@@ -56,41 +57,47 @@ public class CouncilMemberController {
     @Autowired
     private CouncilDesignationService councilDesignationService;
     @Autowired
-    private CouncilQualificationService councilQualificationService;
+    private EducationalQualificationService educationalQualificationService;
     @Autowired
     private CouncilCasteService councilCasteService;
     @Autowired
     private CouncilPartyService councilPartyService;
     @Qualifier("fileStoreService")
-    @Autowired 
+    @Autowired
     protected FileStoreService fileStoreService;
-    @Autowired 
+    @Autowired
     protected FileStoreUtils fileStoreUtils;
-    @Autowired private CouncilMemberIndexService councilMemberIndexService;
+    @Autowired
+    private CouncilMemberIndexService councilMemberIndexService;
+    @Autowired
+    private CouncilMemberValidator councilMemberValidator;
     private static final Logger LOGGER = Logger.getLogger(CouncilMemberController.class);
 
     private void prepareNewForm(final Model model) {
         model.addAttribute("boundarys",
                 boundaryService.getActiveBoundariesByBndryTypeNameAndHierarchyTypeName("Ward", "ADMINISTRATION"));// GET
                                                                                                                   // ELECTION
-        model.addAttribute("councilDesignations",councilDesignationService.getActiveDesignations());                                                                                                      // WARD.
-        model.addAttribute("councilQualifications", councilQualificationService.getActiveQualifications());
+        model.addAttribute("councilDesignations", councilDesignationService.getActiveDesignations());                                                                                                      // WARD.
+        model.addAttribute("councilQualifications", educationalQualificationService.getActiveQualifications());
         model.addAttribute("councilCastes", councilCasteService.getActiveCastes());
         model.addAttribute("councilPartys", councilPartyService.getActiveParties());
+        model.addAttribute("category", CouncilConstants.CATEGORY);
     }
 
     @RequestMapping(value = "/new", method = RequestMethod.GET)
     public String newForm(final Model model) {
         prepareNewForm(model);
+        model.addAttribute("state", "NEW");
         model.addAttribute(COUNCIL_MEMBER, new CouncilMember());
         return COUNCILMEMBER_NEW;
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST)
-    public String create(@Valid @ModelAttribute final CouncilMember councilMember,final BindingResult errors,
-            @RequestParam final MultipartFile attachments,final Model model,
-            final RedirectAttributes redirectAttrs){
-    	if (errors.hasErrors()) {
+    public String create(@Valid @ModelAttribute final CouncilMember councilMember, final BindingResult errors,
+            @RequestParam final MultipartFile attachments, final Model model,
+            final RedirectAttributes redirectAttrs) {
+        councilMemberValidator.validate(councilMember, errors);
+        if (errors.hasErrors()) {
             prepareNewForm(model);
             return COUNCILMEMBER_NEW;
         }
@@ -110,7 +117,8 @@ public class CouncilMemberController {
         redirectAttrs.addFlashAttribute("message", messageSource.getMessage("msg.councilMember.success", null, null));
         return "redirect:/councilmember/result/" + councilMember.getId();
     }
-   @RequestMapping(value = "/edit/{id}", method = RequestMethod.GET)
+
+    @RequestMapping(value = "/edit/{id}", method = RequestMethod.GET)
     public String edit(@PathVariable("id") final Long id, final Model model, final HttpServletResponse response)
             throws IOException {
         CouncilMember councilMember = councilMemberService.findOne(id);
@@ -121,8 +129,10 @@ public class CouncilMemberController {
     }
 
     @RequestMapping(value = "/update", method = RequestMethod.POST)
-    public String update(@Valid @ModelAttribute final CouncilMember councilMember,@RequestParam final MultipartFile attachments, final BindingResult errors,
+    public String update(@Valid @ModelAttribute final CouncilMember councilMember, @RequestParam final MultipartFile attachments,
+            final BindingResult errors,
             final Model model, final RedirectAttributes redirectAttrs) {
+        councilMemberValidator.validate(councilMember, errors);
         if (errors.hasErrors()) {
             prepareNewForm(model);
             return COUNCILMEMBER_EDIT;
@@ -167,10 +177,12 @@ public class CouncilMemberController {
     }
 
     @RequestMapping(value = "/ajaxsearch/{mode}", method = RequestMethod.POST, produces = MediaType.TEXT_PLAIN_VALUE)
-    @ResponseBody public String ajaxsearch(@PathVariable("mode") final String mode, Model model,
+    @ResponseBody
+    public String ajaxsearch(@PathVariable("mode") final String mode, Model model,
             @ModelAttribute final CouncilMember councilMember) {
         List<CouncilMember> searchResultList = councilMemberService.search(councilMember);
-        return new StringBuilder("{ \"data\":").append(toJSON(searchResultList,CouncilMember.class,  CouncilMemberJsonAdaptor.class)).append("}")
+        return new StringBuilder("{ \"data\":")
+                .append(toJSON(searchResultList, CouncilMember.class, CouncilMemberJsonAdaptor.class)).append("}")
                 .toString();
     }
 

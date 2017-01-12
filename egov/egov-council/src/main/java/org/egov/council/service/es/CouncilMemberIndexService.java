@@ -60,14 +60,20 @@ public class CouncilMemberIndexService {
     @Autowired
     private CouncilMemberIndexRepository councilMemberIndexRepository;
     
+    
     public CouncilMemberIndex createCouncilMemberIndex(final CouncilMember councilMember){
         final City cityWebsite = cityService.getCityByURL(ApplicationThreadLocals.getDomainName());
         CouncilMemberIndex memberIndex = new CouncilMemberIndex();
+        memberIndex.setDistrictName(cityWebsite.getDistrictName());
+        memberIndex.setUlbGrade(cityWebsite.getGrade());
+        memberIndex.setUlbCode(cityWebsite.getCode());
+        memberIndex.setRegionName(cityWebsite.getRegionName());
+        memberIndex.setUlbName(cityWebsite.getName());
         if(councilMember != null){
             memberIndex.setId(cityWebsite.getCode().concat("-").concat(councilMember.getId().toString()));
             memberIndex.setName(councilMember.getName() != null ?councilMember.getName():"");
             memberIndex.setAddress(councilMember.getResidentialAddress() != null ?councilMember.getResidentialAddress():"");
-            memberIndex.setBirthDate(councilMember.getBirthDate());
+            memberIndex.setBirthDate(councilMember.getBirthDate()!= null ?councilMember.getBirthDate():null);
             memberIndex.setGender(councilMember.getGender() != null ?councilMember.getGender().toString():"");
             memberIndex.setEmailId(councilMember.getEmailId() != null ?councilMember.getEmailId():"");
             memberIndex.setMobileNumber(councilMember.getMobileNumber() != null ?councilMember.getMobileNumber():"");
@@ -76,9 +82,12 @@ public class CouncilMemberIndexService {
             memberIndex.setQualification(councilMember.getQualification()!= null ?councilMember.getQualification().getDescription():"");
             memberIndex.setPartyAffiliation(councilMember.getPartyAffiliation() != null ?councilMember.getPartyAffiliation().getName():"");
             memberIndex.setStatus(councilMember.getStatus() != null ?councilMember.getStatus().name():"");
-            memberIndex.setElectionDate(councilMember.getElectionDate());
-            memberIndex.setOathDate(councilMember.getOathDate());
+            memberIndex.setElectionDate(councilMember.getElectionDate()!=null?councilMember.getElectionDate():null);
+            memberIndex.setOathDate(councilMember.getOathDate()!=null?councilMember.getOathDate():null);
             memberIndex.setElectionWard(councilMember.getElectionWard() != null ?councilMember.getElectionWard().getName():"");
+            memberIndex.setCreatedDate(councilMember.getCreatedDate());
+            memberIndex.setCategory(councilMember.getCategory()!= null ?councilMember.getCategory():"");
+            memberIndex.setDateOfJoining(councilMember.getDateOfJoining()!=null?councilMember.getDateOfJoining():null);
             councilMemberIndexRepository.save(memberIndex);
         }
         

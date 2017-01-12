@@ -56,7 +56,7 @@
 			<span class="mandatory1">*</span> :</td>
 		<td class="greybox" width=""><s:select headerKey="-1" headerValue="%{getText('default.select')}" name="propTypeId"
 				id="propTypeId" listKey="id" listValue="type" list="dropdownData.PropTypeMaster" value="%{propTypeId}"
-				cssClass="selectnew" onchange="populatePropTypeCategory();toggleFloorDetails();enableFieldsForPropType();" title="Type of ownership"/></td>
+				cssClass="selectnew" onchange="populatePropTypeCategory();toggleFloorDetails();enableFieldsForPropType();populatePropDepartment();" title="Type of ownership"/></td>
 				
 		<td class="greybox" width="25%"><s:text name="property.type"></s:text>
 			<span class="mandatory1" id="prntMandatory">*</span> :</td>
@@ -65,24 +65,31 @@
 		<td class="greybox">
 		   <s:select headerKey="" headerValue="%{getText('default.select')}" name="propertyDetail.categoryType"
 				id="propTypeCategoryId" listKey="key" listValue="value" list="propTypeCategoryMap" value="%{propertyDetail.categoryType}"
-				cssClass="selectnew" onchange="populateUsages();" title="Different types of properties"/>
+				cssClass="selectnew" onchange="populateUsages()" title="Different types of properties"/>
 		   <s:hidden name="propertyCategory" id="propertyCategory"/>
 		</td>
 	</tr>
 	
 	<tr>
 		<td class="greybox" width="5%">&nbsp;</td>
-		<td class="greybox apartmentRow" width="25%"><s:text name="apartcomplex.name"></s:text> :</td>
-		<td class="greybox apartmentRow" width=""><s:select headerKey=""
+		<td class="greybox" width="25%">
+		  <div class="apartmentRow"><s:text name="apartcomplex.name"></s:text> :</div></td>
+		<td class="greybox" width="">		
+		   <div class="apartmentRow">
+		     <s:select headerKey=""
 				headerValue="%{getText('default.select')}" 	name="propertyDetail.apartment" id="apartment"
 				listKey="id" listValue="name" value="%{propertyDetail.apartment.id}"
-				list="dropdownData.apartments" cssClass="selectnew"  title="In Which property belongs to"/></td>
-		<td class="greybox" width="25%"><s:text name="exemptioncategory"/> :</td>
+				list="dropdownData.apartments" cssClass="selectnew"  title="In Which property belongs to"/>
+		   </div>
+		   		
+		</td>
+		<td class="greybox" width="25%"><s:text name="label.property.department"/> :</td>
+		<egov:ajaxdropdown id="propertyDepartmentId" fields="['Value','Text']" dropdownId="propertyDepartmentId"
+			url="/public/common/ajaxcommon-propdepartment-byproptype.action" />
 		<td class="greybox">
-		<s:select name="taxExemptionId" id="taxExemptionId" headerValue="select"
-				headerKey="" list="dropdownData.taxExemptionReasonList" value="%{taxExemptionId}" 
-				listKey="id" listValue="name" cssClass="selectnew" data-optional="1">
-			</s:select>
+		   <s:select headerKey="" headerValue="%{getText('default.select')}" name="propertyDepartmentId"
+				id="propertyDepartmentId" listKey="id" listValue="name" list="propertyDepartmentList" value="%{propertyDepartmentId}"
+				cssClass="selectnew" title="Different types of properties"/>
 		</td>
 	</tr>
 
@@ -137,9 +144,13 @@
 		<td class="greybox"><s:select headerKey="-1" headerValue="%{getText('default.select')}" name="mutationId"
 				id="mutationId" listKey="id" listValue="mutationName" list="dropdownData.MutationList" value="%{mutationId}"
 				cssClass="selectnew" onchange="makeMandatory();" /></td>
-		<td class="greybox parentIndexText"><s:text name="prntPropAssessmentNum" /> <span
-			class="mandatory1" id="prntMandatory">*</span> :</td>
-		<td class="greybox parentIndexText"><s:textfield name="parentIndex" id="parentIndex" size="12" maxlength="10" onblur="validNumber(this);checkZero(this,'Parent Index');"></s:textfield></td>
+		<td class="greybox"><div class="parentIndexText"><s:text name="prntPropAssessmentNum" /> <span
+			class="mandatory1" id="prntMandatory">*</span> :</div></td>
+		<td class="greybox">
+		  <div class="parentIndexText">
+		  <s:textfield name="parentIndex" id="parentIndex" size="12" maxlength="10" onblur="validNumber(this);checkZero(this,'Parent Index');"></s:textfield>
+		  </div>
+		  </td>
 
 	</tr>
 
@@ -296,6 +307,11 @@
 		populatelocationFactor({
 			wardId : document.getElementById("wardId").value
 		});
-	} 
+	}
+ 	function populatePropDepartment() {
+		populatepropertyDepartmentId({
+			propTypeId : document.getElementById("propTypeId").value
+		});
+	}
     
 </script>

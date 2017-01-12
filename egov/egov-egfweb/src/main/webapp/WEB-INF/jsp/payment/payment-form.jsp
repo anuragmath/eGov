@@ -57,7 +57,7 @@
 
 </script>
 </head>
-<body>
+<body onload="onLoad();">
 	<br>
 	<s:form action="payment" theme="simple">
 		<s:token />
@@ -517,8 +517,15 @@
 					</tr>
 				</table>
 				<s:hidden name="cutOffDate" id="cutOffDate" />
+<<<<<<< HEAD
 				<%@ include file='../workflow/commonworkflow.jsp'%>
 				<%@ include file='../workflow/commonworkflow-button.jsp'%>
+=======
+				<s:hidden name="bankBalanceCheck" id="bankBalanceCheck" value="%{bankBalanceCheck}" />
+			 
+				<%@ include file='../payment/commonWorkflowMatrix.jsp'%>
+				<%@ include file='../workflow/commonWorkflowMatrix-button.jsp'%>
+>>>>>>> refs/remotes/origin/develop
 			</div>
 
 			<div class="buttonbottom" id="buttondiv">
@@ -626,14 +633,26 @@
 				}
 			}
 			return true;
+		} 
+			
+		function onLoad(){
+			if (jQuery("#bankBalanceCheck") == null || jQuery("#bankBalanceCheck").val() == "") {
+				disableForm();
+			}
 		}
 		function onSubmit()
 		{
 			doLoadingMask();
+<<<<<<< HEAD
 			
  			 if(!validateCutOff())
 				return false; 
 			 
+=======
+			var balanceCheckMandatory='<s:text name="payment.mandatory"/>';
+			var balanceCheckWarning='<s:text name="payment.warning"/>';
+			var noBalanceCheck='<s:text name="payment.none"/>';
+>>>>>>> refs/remotes/origin/develop
 			if(dom.get('department').value=='-1')
 			{
 				bootbox.alert("Please Select the Department!!");
@@ -694,20 +713,41 @@
 					}
 				}
 			</s:if>
-			if(!balanceCheck()){
-				 var msg = confirm("Insufficient Bank Balance. Do you want to process ?");
-				 if (msg == true) {
-					 document.forms[0].action='${pageContext.request.contextPath}/payment/payment-create.action';
-					return true;
-				 } else {
+			var balanceCheckMandatory='<s:text name="payment.mandatory"/>';
+			var balanceCheckWarning='<s:text name="payment.warning"/>';
+			var noBalanceCheck='<s:text name="payment.none"/>';
+			if(jQuery("#bankBalanceCheck").val()==noBalanceCheck)
+			{
+			 document.forms[0].action='${pageContext.request.contextPath}/payment/payment-create.action';
+			 return true;
+			}
+			else if(!balanceCheck() && jQuery("#bankBalanceCheck").val()==balanceCheckMandatory){
+					 bootbox.alert("Insufficient Bank Balance.");
 					 undoLoadingMask();
-				   	return false;
+					 return false;
+					}
+			else if(!balanceCheck() && jQuery("#bankBalanceCheck").val()==balanceCheckWarning){
+					 var msg = confirm("Insufficient Bank Balance. Do you want to process ?");
+					 if (msg == true) {
+						 document.forms[0].action='${pageContext.request.contextPath}/payment/payment-create.action';
+						return true;
+					 } else {
+						 undoLoadingMask();
+					   	return false;
+						}
 				}
-			}else{
-				document.forms[0].action='${pageContext.request.contextPath}/payment/payment-create.action';
+			else
+			{
+				document.forms[0].action = '${pageContext.request.contextPath}/payment/payment-create.action';
 				return true;
+ 
 				}
 		}
+ 
+			}
+		}  
+		
+ 
 		function validateCutOff()
 		{
 			 

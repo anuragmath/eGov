@@ -39,7 +39,7 @@
  */
 package org.egov.wtms.web.controller.reports;
 
-import static org.egov.infra.web.utils.WebUtils.toJSON;
+import static org.egov.infra.utils.JsonUtils.toJSON;
 
 import java.io.IOException;
 import java.text.ParseException;
@@ -58,6 +58,8 @@ import org.egov.infra.admin.master.entity.Module;
 import org.egov.infra.admin.master.service.BoundaryService;
 import org.egov.infra.admin.master.service.ModuleService;
 import org.egov.wtms.application.entity.BaseRegisterResult;
+import org.egov.wtms.application.service.BaseRegisterReportService;
+import org.egov.wtms.reports.entity.BaseRegisterResultAdaptor;
 import org.egov.wtms.utils.constants.WaterTaxConstants;
 import org.hibernate.SQLQuery;
 import org.springframework.beans.factory.annotation.Autowired;

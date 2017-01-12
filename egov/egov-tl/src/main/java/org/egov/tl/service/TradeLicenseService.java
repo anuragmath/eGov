@@ -71,6 +71,7 @@ import org.egov.tl.entity.NatureOfBusiness;
 import org.egov.tl.entity.TradeLicense;
 import org.egov.tl.entity.WorkflowBean;
 import org.egov.tl.entity.dto.SearchForm;
+import org.egov.tl.repository.LicenseRepository;
 import org.egov.tl.utils.Constants;
 import org.egov.tl.utils.LicenseUtils;
 import org.hibernate.Criteria;
@@ -90,6 +91,9 @@ public class TradeLicenseService extends AbstractLicenseService<TradeLicense> {
 
     @Autowired
     private LicenseUtils licenseUtils;
+    
+    @Autowired
+    private LicenseRepository licenseRepository;
 
     @Autowired
     private ModuleService moduleService;
@@ -145,8 +149,7 @@ public class TradeLicenseService extends AbstractLicenseService<TradeLicense> {
                     license.setLicenseNumber(licenseNumberUtils.generateLicenseNumber());
             }
             license.setActive(true);
-            if (license.getCurrentDemand().getBaseDemand().compareTo(license.getCurrentDemand().getAmtCollected()) == -1
-                    || license.getCurrentDemand().getBaseDemand().compareTo(license.getCurrentDemand().getAmtCollected()) == 0)
+            if (license.getCurrentDemand().getBaseDemand().compareTo(license.getCurrentDemand().getAmtCollected()) <= 0)
                 license = (TradeLicense) licenseUtils.applicationStatusChange(license,
                         Constants.APPLICATION_STATUS_APPROVED_CODE);
             else
@@ -173,10 +176,7 @@ public class TradeLicenseService extends AbstractLicenseService<TradeLicense> {
                     Constants.APPLICATION_STATUS_GENECERT_CODE);
         }
         if (BUTTONREJECT.equals(workFlowAction))
-            if (license.getLicenseAppType() != null
-                    && license.getLicenseAppType().getName().equals(Constants.RENEWAL_LIC_APPTYPE))
-                license.setStatus(licenseStatusService.getLicenseStatusByCode(Constants.STATUS_ACTIVE));
-            else if (wfInitiator.equals(userAssignment.getPosition())) {
+            if (license.getLicenseAppType() != null && wfInitiator.equals(userAssignment.getPosition()) && ("Rejected".equals(license.getState().getValue())) || "License Created".equals(license.getState().getValue())) {
                 license.setStatus(licenseStatusService.getLicenseStatusByCode(Constants.STATUS_CANCELLED));
                 license = (TradeLicense) licenseUtils.applicationStatusChange(license,
                         Constants.APPLICATION_STATUS_CANCELLED);
@@ -187,7 +187,7 @@ public class TradeLicenseService extends AbstractLicenseService<TradeLicense> {
             }
         if (null != license && null != license.getState()
                 && license.getState().getValue().contains(Constants.WF_REVENUECLERK_APPROVED)
-                && recalDemandAmount.compareTo(currentDemandAmount) == 1)
+                && recalDemandAmount.compareTo(currentDemandAmount) > 0)
             updateDemandForChangeTradeArea(license);
     }
 
@@ -237,29 +237,29 @@ public class TradeLicenseService extends AbstractLicenseService<TradeLicense> {
         return reportParams;
     }
 
-    public List<TradeLicense> getTradeLicenseForGivenParam(final String paramValue, final String paramType) {
-        List<TradeLicense> licenseList = new ArrayList<>();
+    public List<String> getTradeLicenseForGivenParam(final String paramValue, final String paramType) {
+        List<String> licenseList = new ArrayList<>();
         if (paramType.equals(Constants.SEARCH_BY_APPNO))
-            licenseList = entityQueryService.findAllBy("from License where upper(applicationNumber) like ?", "%"
-                    + paramValue.toUpperCase() + "%");
+            licenseList = licenseRepository.findByApplicationNumberLike(paramValue);
+
         else if (paramType.equals(Constants.SEARCH_BY_LICENSENO))
-            licenseList = entityQueryService.findAllBy("from License where  upper(licenseNumber) like ?", "%"
-                    + paramValue.toUpperCase() + "%");
+            licenseList = licenseRepository.findByLicenseNumberLike(paramValue);
+
         else if (paramType.equals(Constants.SEARCH_BY_OLDLICENSENO))
-            licenseList = entityQueryService.findAllBy("from License where  upper(oldLicenseNumber) like ?", "%"
-                    + paramValue.toUpperCase() + "%");
+            licenseList = licenseRepository.findByOldLicenseNumberLike(paramValue);
+
         else if (paramType.equals(Constants.SEARCH_BY_TRADETITLE))
-            licenseList = entityQueryService.findAllBy("from License where  upper(nameOfEstablishment) like ?",
-                    "%" + paramValue.toUpperCase() + "%");
+            licenseList = licenseRepository.findByNameOfEstablishmentLike(paramValue);
+
         else if (paramType.equals(Constants.SEARCH_BY_TRADEOWNERNAME))
-            licenseList = entityQueryService.findAllBy(
-                    "from License where  upper(licensee.applicantName) like ?", "%" + paramValue.toUpperCase() + "%");
+            licenseList = licenseRepository.findByApplicantNameLike(paramValue);
+
         else if (paramType.equals(Constants.SEARCH_BY_PROPERTYASSESSMENTNO))
-            licenseList = entityQueryService.findAllBy("from License where  upper(assessmentNo) like ?", "%"
-                    + paramValue.toUpperCase() + "%");
+            licenseList = licenseRepository.findByAssessmentNoLike(paramValue);
+
         else if (paramType.equals(Constants.SEARCH_BY_MOBILENO))
-            licenseList = entityQueryService.findAllBy("from License where  licensee.mobilePhoneNumber like ?",
-                    "%" + paramValue + "%");
+            licenseList = licenseRepository.findByMobilePhoneNumberLike(paramValue);
+
         return licenseList;
     }
 
@@ -288,8 +288,6 @@ public class TradeLicenseService extends AbstractLicenseService<TradeLicense> {
             searchCriteria.add(Restrictions.eq("licc.mobilePhoneNumber", searchForm.getMobileNo()));
         if (searchForm.getStatusId() != null)
             searchCriteria.add(Restrictions.eq("status.id", searchForm.getStatusId()));
-        if (searchForm.getIsCancelled() != null && searchForm.getIsCancelled().equals(Boolean.TRUE))
-            searchCriteria.add(Restrictions.eq("licstatus.statusCode", StringUtils.upperCase("CAN")));
         else
             searchCriteria.add(Restrictions.ne("licstatus.statusCode", StringUtils.upperCase("CAN")));
         searchCriteria.add(Restrictions.isNotNull("applicationNumber"));
@@ -313,4 +311,5 @@ public class TradeLicenseService extends AbstractLicenseService<TradeLicense> {
         }
         return finalList;
     }
+
 }

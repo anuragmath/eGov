@@ -40,13 +40,13 @@
 
 package org.egov.wtms.web.controller.reports;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
 import org.egov.infra.admin.master.entity.Boundary;
 import org.egov.infra.admin.master.service.BoundaryService;
 import org.egov.ptis.constants.PropertyTaxConstants;
 import org.egov.wtms.application.service.WaterConnectionDetailsService;
+import org.egov.wtms.reports.entity.DCBReportHelperAdaptor;
+import org.egov.wtms.reports.entity.DCBReportResult;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.transform.AliasToBeanResultTransformer;
@@ -68,7 +68,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.egov.infra.web.utils.WebUtils.toJSON;
+import static org.egov.infra.utils.JsonUtils.toJSON;
 import static org.egov.ptis.constants.PropertyTaxConstants.BLOCK;
 import static org.egov.ptis.constants.PropertyTaxConstants.LOCALITY;
 import static org.egov.ptis.constants.PropertyTaxConstants.LOCATION_HIERARCHY_TYPE;
@@ -183,7 +183,7 @@ public class DCBReportController {
         String result = null;
         result = new StringBuilder("{ \"data\":").append(toJSON(resultList, DCBReportResult.class, DCBReportHelperAdaptor.class)).append("}").toString();
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        IOUtils.write(result, response.getWriter());
+        IOUtils.write(result, response.getWriter());    
     }
 
     private SQLQuery prepareQuery(final String paramList, final String connectionType, final String mode,

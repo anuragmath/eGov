@@ -54,6 +54,7 @@ import org.egov.infra.utils.DateUtils;
 import org.egov.lcms.transactions.entity.EmployeeHearing;
 import org.egov.lcms.transactions.entity.Hearings;
 import org.egov.lcms.transactions.entity.LegalCase;
+import org.egov.lcms.transactions.entity.ReportStatus;
 import org.egov.lcms.transactions.repository.HearingsRepository;
 import org.egov.lcms.utils.LegalCaseUtil;
 import org.egov.lcms.utils.constants.LcmsConstants;
@@ -81,8 +82,10 @@ public class HearingsService {
         buildEmplyeeList(hearings);
         updateNextDate(hearings, hearings.getLegalCase());
         final EgwStatus statusObj = legalCaseUtil.getStatusForModuleAndCode(LcmsConstants.MODULE_TYPE_LEGALCASE,
-                LcmsConstants.LEGALCASE_STATUS_IN_PROGRESS);
+                LcmsConstants.LEGALCASE_HEARING_STATUS);
         hearings.getLegalCase().setStatus(statusObj);
+        final ReportStatus reportStatus=null;
+        hearings.getLegalCase().setReportStatus(reportStatus);
         return hearingsRepository.save(hearings);
     }
 
@@ -154,14 +157,14 @@ public class HearingsService {
     public BindingResult validateDate(final Hearings hearings, final LegalCase legalCase, final BindingResult errors) {
 
         if (!DateUtils.compareDates(hearings.getHearingDate(), hearings.getLegalCase().getCaseDate()))
-            errors.rejectValue("hearingDate", "ValidateDate.hearing.casedate");
+            errors.rejectValue("hearingDate", "validatedate.hearing.casedate");
         final List<Hearings> hearingsList = legalCase.getHearings();
         int count = 0;
         for (final Hearings hearings2 : hearingsList)
             if (DateUtils.compareDates(hearings2.getHearingDate(), new Date()))
                 count++;
         if (count >= 1)
-            errors.rejectValue("hearingDate", "ValidateDate.hearing.futuredate");
+            errors.rejectValue("hearingDate", "validatedate.hearing.futuredate");
         return errors;
     }
 
