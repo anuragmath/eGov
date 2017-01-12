@@ -41,25 +41,27 @@ package org.egov.eis.web.actions;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.convention.annotation.Action;
 import org.apache.struts2.convention.annotation.ParentPackage;
 import org.apache.struts2.convention.annotation.Result;
 import org.apache.struts2.convention.annotation.ResultPath;
 import org.apache.struts2.convention.annotation.Results;
-import org.egov.eis.entity.Assignment;
-import org.egov.eis.service.AssignmentService;
+import org.egov.eis.service.DesignationService;
+import org.egov.eis.workflow.service.InternalDefaultWorkflow;
+import org.egov.infra.admin.master.entity.Department;
+import org.egov.infra.admin.master.service.DepartmentService;
 import org.egov.infra.web.struts.actions.BaseFormAction;
 import org.egov.infra.workflow.matrix.entity.WorkFlowMatrix;
 import org.egov.infra.workflow.matrix.service.CustomizedWorkFlowService;
+import org.egov.infra.workflow.multitenant.model.Attribute;
+import org.egov.infra.workflow.multitenant.model.Task;
+import org.egov.infra.workflow.multitenant.service.WorkflowInterface;
 import org.egov.pims.commons.Designation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
 /**
  *
@@ -74,58 +76,57 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class AjaxWorkFlowAction extends BaseFormAction {
 
     private static final long serialVersionUID = -4816498948951535977L;
-    private static final String WF_DESIGNATIONS = "designations";
+
     private static final String WF_APPROVERS = "approvers";
+    private static final String WF_DESIGNATIONS = "designations";
     private List<Designation> designationList;
+    protected InternalDefaultWorkflow internalDefaultWorkflow = new InternalDefaultWorkflow();
     private List<Object> approverList;
     private Long designationId;
     private Long approverDepartmentId;
-
     private CustomizedWorkFlowService customizedWorkFlowService;
+
+    @Autowired
+    private ApplicationContext applicationContext;
     private String type;
     private BigDecimal amountRule;
     private String additionalRule;
     private String currentState;
     private String pendingAction;
-    // private String designationRule;
     private String departmentRule;
-    private String designation;
     private List<String> roleList;
     @Autowired
-    private AssignmentService assignmentService;
+    DepartmentService departmentService;
+    @Autowired
+    DesignationService designationService;
 
     @Action(value = "/workflow/ajaxWorkFlow-getPositionByPassingDesigId")
     public String getPositionByPassingDesigId() {
-        if (designationId != null && designationId != -1) {
-
-            final HashMap<String, String> paramMap = new HashMap<String, String>();
-            if (approverDepartmentId != null && approverDepartmentId != -1)
-                paramMap.put("departmentId", approverDepartmentId.toString());
-            paramMap.put("designationId", designationId.toString());
-            approverList = new ArrayList<Object>();
-            final List<Assignment> assignmentList = assignmentService
-                    .findAllAssignmentsByDeptDesigAndDates(approverDepartmentId,
-                            designationId, new Date());
-            for (final Assignment assignment : assignmentList)
-                approverList.add(assignment);
-        }
+        final WorkflowInterface workflowImplementation = getWorkflowImplementation();
+        final Department dept = departmentService.getDepartmentById(approverDepartmentId);
+        final String approverDeptCode = dept.getCode();
+        final Designation desig = designationService.getDesignationById(designationId);
+        final String desigName = desig.getName();
+        approverList = workflowImplementation.getAssignee(approverDeptCode, desigName);
         return WF_APPROVERS;
     }
 
     @Action(value = "/workflow/ajaxWorkFlow-getDesignationsByObjectType")
     public String getDesignationsByObjectType() {
-        if ("END".equals(currentState))
-            currentState = "";
-        if (StringUtils.isNotBlank(designation))
-            designationList = customizedWorkFlowService.getNextDesignations(type,
-                    departmentRule, amountRule, additionalRule, currentState,
-                    pendingAction, new Date(), designation);
-        else
-            designationList = customizedWorkFlowService.getNextDesignations(type,
-                    departmentRule, amountRule, additionalRule, currentState,
-                    pendingAction, new Date());
-        if (designationList.isEmpty())
-            designationList = persistenceService.findAllBy("from Designation");
+        final WorkflowInterface workflowImplementation = getWorkflowImplementation();
+
+        final Task task = new Task();
+        task.setBusinessKey(type);
+        task.setStatus(currentState);
+        final Attribute amount = new Attribute();
+        amount.setCode(amountRule == null ? null : amountRule.toString());
+        task.getAttributes().put("amountRule", amount);
+        final Attribute additional = new Attribute();
+        additional.setCode(additionalRule);
+        task.getAttributes().put("additionalRule", additional);
+        task.setAction(pendingAction);
+        final Department dept = departmentService.getDepartmentByName(departmentRule);
+        designationList = workflowImplementation.getDesignations(task, dept.getCode());
         return WF_DESIGNATIONS;
     }
 
@@ -194,9 +195,9 @@ public class AjaxWorkFlowAction extends BaseFormAction {
         this.approverDepartmentId = approverDepartmentId;
     }
 
-    /*
-     * public void setDesignationRule(String designationRule) { this.designationRule = designationRule; }
-     */
+    public void setApproverDepartmentCode(final String approverDepartmentCode) {
+    }
+
     public void setDepartmentRule(final String departmentRule) {
         this.departmentRule = departmentRule;
     }
@@ -223,12 +224,9 @@ public class AjaxWorkFlowAction extends BaseFormAction {
         this.roleList = roleList;
     }
 
-    public String getDesignation() {
-        return designation;
-    }
+    public WorkflowInterface getWorkflowImplementation() {
+        // this will decide by p.getBusinessKey and p.getId
 
-    public void setDesignation(final String designation) {
-        this.designation = designation;
+        return (WorkflowInterface) applicationContext.getBean("internalDefaultWorkflow");
     }
-
 }
