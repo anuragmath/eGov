@@ -648,7 +648,7 @@ function onSubmit()
 	}
 }
 function validateCutOff()
-{
+{   
 var cutOffDatePart=document.getElementById("cutOffDate").value.split("/");
 var billDatePart=document.getElementById("billDate").value.split("/");
 var cutOffDate = new Date(cutOffDatePart[1] + "/" + cutOffDatePart[0] + "/"

@@ -106,8 +106,7 @@
 						<input type="submit" name="closeButton"	id="closeButton" value="Close" Class="btn btn-default" onclick="window.close();" />
 					</div>
 				</div>
-			</c:if>
-		</div>
+ 		</div>
   
 </form:form>  
 <script src="<cdn:url value='/resources/app/js/expensebill/viewexpensebill.js?rnd=${app_release_no}'/>"></script>

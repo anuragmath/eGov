@@ -49,13 +49,15 @@
 	content="text/html; charset=windows-1252">
 <title><s:property value="type" /> JV-Create</title>
 </head>
+	<script type="text/javascript"
+	src="${pageContext.request.contextPath}/resources/javascript/voucherHelper.js?rnd=${app_release_no}"></script>
 <script>
 	function checkBillIdBillview(){
 		if(document.getElementById('id').value!=''){
 			document.getElementById('aa_approve').disabled=true;
 		}else{
 			document.getElementById('aa_approve').disabled=false;
-		}
+		}  
 		if('<s:property value="voucherHeader.id"/>' ==''){
 			document.getElementById('print').disabled=true;
 		}else{
@@ -91,26 +93,30 @@ function openSource(){
 }
 function validateCutOff()
 {
-	console.log(document.getElementById("cutOffDate"));
-var cutOffDatePart=document.getElementById("cutOffDate").value.split("/");
-var voucherDatePart=document.getElementById("voucherDate").value.split("/");
-var cutOffDate = new Date(cutOffDatePart[1] + "/" + cutOffDatePart[0] + "/"
-		+ cutOffDatePart[2]);
-var voucherDate = new Date(voucherDatePart[1] + "/" + voucherDatePart[0] + "/"
-		+ voucherDatePart[2]);
-if(voucherDate<=cutOffDate)
-{
-	return true;
-}
-else{
+	 
+	console.log("validate cutt off3");
+	if(document.getElementById("workflowAction").value.trim()=='Create And Approve')
+	{
+    var cutOffDate= jQuery('#cutOffDate').val();  
+    var voucherDate= jQuery('#voucherDate').val();  
+
+	if(!validateCreateAndApprove(cutOffDate,voucherDate))
+	{
 	var msg1='<s:text name="wf.vouchercutoffdate.message"/>';
 	var msg2='<s:text name="wf.cutoffdate.msg"/>';
+	undoLoadingMask();
 	bootbox.alert(msg1+" "+document.getElementById("cutOffDate").value+" "+msg2);
 		return false;
 	}
+
+	} 
+	return true;
+
 }
 function onSubmit()
 {
+	if(!validateCutOff())
+		return false;
 	var voucherdate =document.getElementById('voucherDate').value ;
 	if(voucherdate!=null && voucherdate!=""){
 		document.preApprovedVoucher.action='${pageContext.request.contextPath}/voucher/preApprovedVoucher-save.action';
@@ -125,7 +131,8 @@ jQuery("#voucherDate").datepicker().datepicker("setDate", new Date());
 });
 
 </script>
-<body onload="checkBillIdBillview()">
+<!-- <body onload="checkBillIdBillview()"> -->
+<body>
 	<s:form action="preApprovedVoucher" theme="simple"
 		name="preApprovedVoucher" id="preApprovedVoucher">
 		<jsp:include page="../budget/budgetHeader.jsp">
@@ -277,18 +284,22 @@ jQuery("#voucherDate").datepicker().datepicker("setDate", new Date());
 						<br />
 					</table>
 				</div>
-				<s:if test="%{!mode.equalsIgnoreCase('save')}">
-					<s:hidden id="cutOffDate" name="cutOffDate" />
-					<%@ include file='../workflow/commonWorkflowMatrix.jsp'%>
-					<%@ include file='../workflow/commonWorkflowMatrix-button.jsp'%>
-				</s:if>
-				<s:else>
-					<div class="buttonbottom" align="center">
+<%-- 				 <s:hidden id="cutOffDate" name="cutOffDate" />
+ --%>				  <s:if test="%{!mode.equalsIgnoreCase('save')}">  
+ 				   <s:hidden id="cutOffDate" name="cutOffDate" />
+ 				 <s:hidden id="voucherDate" name="voucherDate" /> 
+		  				<%@ include file="../workflow/commonworkflow.jsp"%>
+						<%@ include file="../workflow/commonworkflow-button.jsp"%>
+				 
+  				  </s:if> 
+ 		 	<s:else> 
+ 				<div class="buttonbottom" align="center">
 						<input type="button" name="button2" id="button2" value="Close"
 							class="button" onclick="window.close();" />
+							
 					</div>
-				</s:else>
-			</div>
+ 				</s:else>
+  			</div>
 		</div>
 		<s:if test="%{hasErrors()}">
 			<script>

@@ -40,7 +40,7 @@
 
 package org.egov.infra.common.entity;
 
-import static org.egov.infra.common.entity.State.SEQ_EG_STATE;
+import static org.egov.infra.common.entity.EgState.SEQ_EG_STATE;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -60,7 +60,7 @@ import org.egov.infra.persistence.entity.AbstractPersistable;
 @Entity
 @Table(name = "eg_state", schema = "public")
 @SequenceGenerator(name = SEQ_EG_STATE, sequenceName = SEQ_EG_STATE, allocationSize = 1)
-public class State extends AbstractPersistable<Long> {
+public class EgState extends AbstractPersistable<Long> {
 
     private static final long serialVersionUID = -6477774727634633483L;
 

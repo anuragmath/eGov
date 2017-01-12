@@ -84,6 +84,7 @@ $('.btn-wf-primary').click(function(){
 			$('#approverDesignationId').removeAttr('required');
 			$('#approverPositionId').removeAttr('required');
 			$('#workflowComments').removeAttr('required', 'required');
+			$("#workflowAction").val(" Create And Approve");
 		 }
 		 if(!$("form").valid())
 			{

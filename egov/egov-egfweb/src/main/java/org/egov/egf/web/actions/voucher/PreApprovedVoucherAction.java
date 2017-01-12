@@ -101,6 +101,7 @@ import org.egov.model.bills.EgBilldetails;
 import org.egov.model.bills.EgBillregister;
 import org.egov.model.bills.EgBillregistermis;
 import org.egov.model.contra.ContraJournalVoucher;
+import org.egov.model.payment.Paymentheader;
 import org.egov.model.voucher.PreApprovedVoucher;
 import org.egov.infra.workflow.multitenant.model.WorkflowBean;
 import org.egov.infra.workflow.multitenant.model.WorkflowConstants;
@@ -255,16 +256,20 @@ public class PreApprovedVoucherAction extends BaseWorkFlowAction {
     @SkipValidation
     @Action(value = "/voucher/preApprovedVoucher-voucher")
     public String voucher() {
-        List<AppConfigValues> cutOffDateconfigValue = appConfigValuesService.getConfigValuesByModuleAndKey("EGF",
-                "DataEntryCutOffDate");
-        if (cutOffDateconfigValue != null && !cutOffDateconfigValue.isEmpty()) {
-            try {
-                date = df.parse(cutOffDateconfigValue.get(0).getValue());
-                cutOffDate = formatter.format(date);
-            } catch (ParseException e) {
+    	workflowBean.setBusinessKey(voucherHeader.getClass().getSimpleName());
+		prepareWorkflow(null, getModel(),workflowBean);
+    	getCutoffDateConfigValue();
+     	
+    	/* List<AppConfigValues> cutOffDateconfigValue = appConfigValuesService.getConfigValuesByModuleAndKey("EGF",
+                 "DataEntryCutOffDate");
+         if (cutOffDateconfigValue != null && !cutOffDateconfigValue.isEmpty()) {
+             try {
+                 date = df.parse(cutOffDateconfigValue.get(0).getValue());
+                 cutOffDate = formatter1.format(date);
+             } catch (ParseException e) {
 
-            }
-        }
+             }
+         }*/
         egBillregister = (EgBillregister) getPersistenceService().find(" from EgBillregister where id=?",
                 Long.valueOf(parameters.get(BILLID)[0]));
         voucherHeader = egBillregister.getEgBillregistermis().getVoucherHeader();
@@ -315,7 +320,22 @@ public class PreApprovedVoucherAction extends BaseWorkFlowAction {
         }
 
     }
+    private void getCutoffDateConfigValue() {
 
+		try {
+			List<AppConfigValues> cutOffDateconfigValue = appConfigValuesService.getConfigValuesByModuleAndKey("EGF",
+					"DataEntryCutOffDate");
+			if (cutOffDateconfigValue != null && !cutOffDateconfigValue.isEmpty()) {
+				Date configuredDBDate = df.parse(cutOffDateconfigValue.get(0).getValue());
+				cutOffDate = df.format(configuredDBDate);
+			} else {
+				LOGGER.debug("Cut off Date for approve voucher/bill on create not configured");
+			}
+
+		} catch (ParseException e) {
+
+		}
+	}
     
 
     @SkipValidation
@@ -485,7 +505,7 @@ public class PreApprovedVoucherAction extends BaseWorkFlowAction {
             if (LOGGER.isDebugEnabled())
                 LOGGER.debug("bill id=======" + parameters.get(BILLID)[0]);
             methodName = "save";
-            String voucherDate = formatter1.format(voucherHeader.getVoucherDate());
+            String voucherDate = formatter.format(voucherHeader.getVoucherDate());
             String cutOffDate1 = null;
             // check budgetary check
             egBillregister = billsService.getBillRegisterById(Integer.valueOf(parameters.get(BILLID)[0]));
@@ -501,7 +521,7 @@ public class PreApprovedVoucherAction extends BaseWorkFlowAction {
                     Long.parseLong(parameters.get(BILLID)[0]), voucherNumber, voucherHeader.getVoucherDate());
             if (!cutOffDate.isEmpty() && cutOffDate != null) {
                 try {
-                    date = sdf.parse(cutOffDate);
+                    date = df.parse(cutOffDate);
                     cutOffDate1 = formatter1.format(date);
                 } catch (ParseException e) {
 
@@ -603,9 +623,8 @@ public class PreApprovedVoucherAction extends BaseWorkFlowAction {
 
         return "message";
     }
-    
-    
-    public String generateMessage(CVoucherHeader voucherHeader, WorkflowBean workflowBean) {
+  
+       	public String generateMessage(CVoucherHeader voucherHeader, WorkflowBean workflowBean) {
         String message="";
         switch(workflowBean.getWorkflowAction().toLowerCase())   
         {
@@ -634,10 +653,20 @@ public class PreApprovedVoucherAction extends BaseWorkFlowAction {
             message=getText("voucher.saved.success",
                     new String[] {voucherHeader.getVoucherNumber()});
             break;   
+            
+        case WorkflowConstants.ACTION_CREATE_AND_APPROVE:
+			message = getText("voucher.approved.success",
+					new String[] { voucherHeader.getVoucherNumber() });
+			if(voucherHeader.getVouchermis().getBudgetaryAppnumber()!=null)
+				message=message+getText("budget.appr.number.success", new String[] {voucherHeader.getVouchermis().getBudgetaryAppnumber()});
+			
+			break;
 
         }
         return message;
     }
+    
+ 
 
     protected void populateWorkflowBean() {
        /* workflowBean.setApproverPositionId(approverPositionId);

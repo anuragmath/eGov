@@ -509,6 +509,10 @@
 	        <put-attribute name="page-title" value="lbl.expensebill" cascade="true"/>
 	        <put-attribute name="body" value="/WEB-INF/views/expensebill/expensebill-view.jsp"/>
 	</definition>
+	<definition name="expensebill-viewworkflow" extends="base_layout">
+	        <put-attribute name="page-title" value="lbl.expensebill" cascade="true"/>
+	        <put-attribute name="body" value="/WEB-INF/views/expensebill/expensebill-viewworkflow.jsp"/>
+	</definition>
 	
 	<definition name="expensebill-update" extends="base_layout">
 		<put-attribute name="page-title" value="title.expensebill.create" cascade="true"/>

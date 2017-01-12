@@ -74,7 +74,7 @@ public class Ulb extends AbstractPersistable<Long> {
 
     @ManyToOne
     @JoinColumn(name = "state", nullable = false)
-    private State state;
+    private EgState state;
 
     @Override
     public Long getId() {
@@ -110,11 +110,11 @@ public class Ulb extends AbstractPersistable<Long> {
         this.description = description;
     }
 
-    public State getState() {
+    public EgState getState() {
         return state;
     }
 
-    public void setState(final State state) {
+    public void setState(final EgState state) {
         this.state = state;
     }
 

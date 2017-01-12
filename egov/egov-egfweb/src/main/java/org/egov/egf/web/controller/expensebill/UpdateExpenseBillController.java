@@ -166,6 +166,7 @@ public class UpdateExpenseBillController extends BaseBillController {
         String message = "";
         EgBillregister updatedEgBillregister = null;
         WorkflowBean workflowBean = baseWorkFlow.populateWorkflowBean(request);
+        System.out.println("WorkflowAction:...................................."+workflowBean.getWorkflowAction());
         try {
             if (FinancialConstants.WORKFLOW_STATE_REJECTED.equals(workflowBean.getCurrentState())) {
                 populateBillDetails(egBillregister);

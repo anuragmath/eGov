@@ -40,7 +40,7 @@
 
 package org.egov.infra.common.service;
 
-import org.egov.infra.common.entity.State;
+import org.egov.infra.common.entity.EgState;
 import org.egov.infra.common.repository.StatesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -53,7 +53,7 @@ public class StatesService {
     @Autowired
     private StatesRepository statesRepository;
 
-    public State getByName(final String name) {
+    public EgState getByName(final String name) {
         return statesRepository.findByName(name);
     }
 

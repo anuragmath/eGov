@@ -68,7 +68,7 @@ public class ServiceImplementations extends AbstractPersistable<Long> {
 
     @ManyToOne
     @JoinColumn(name = "state")
-    private State state;
+    private EgState state;
 
     @ManyToOne
     @JoinColumn(name = "ulb")
@@ -90,11 +90,11 @@ public class ServiceImplementations extends AbstractPersistable<Long> {
         this.id = id;
     }
 
-    public State getState() {
+    public EgState getState() {
         return state;
     }
 
-    public void setState(final State state) {
+    public void setState(final EgState state) {
         this.state = state;
     }
 
