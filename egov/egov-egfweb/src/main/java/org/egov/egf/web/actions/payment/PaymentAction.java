@@ -783,10 +783,13 @@ public class PaymentAction extends BasePaymentAction {
 		final List<PaymentBean> paymentList = new ArrayList<PaymentBean>();
 		List<AppConfigValues> cutOffDateconfigValue = appConfigValuesService.getConfigValuesByModuleAndKey("EGF",
 				"DataEntryCutOffDate");
+		if (getBankBalanceCheck() == null || "".equals(getBankBalanceCheck())) {
+			addActionMessage(getText("payment.setupmiss.match"));
+		}
 		if (cutOffDateconfigValue != null && !cutOffDateconfigValue.isEmpty()) {
 			try {
 				date = df.parse(cutOffDateconfigValue.get(0).getValue());
-				cutOffDate = formatter.format(date);
+				cutOffDate = df.format(date);
 			} catch (ParseException e) {
 
 			}
@@ -951,7 +954,7 @@ public class PaymentAction extends BasePaymentAction {
 		try {
 			String vdate = parameters.get("voucherdate")[0];
 			Date date1 = sdf1.parse(vdate);
-			String voucherDate = formatter1.format(date1);
+			String voucherDate = sdf1.format(date1);
 			String cutOffDate1 = null;
 			// billregister.getEgBillregistermis().setFunction(functionSel);
 			paymentActionHelper.setbillRegisterFunction(billregister, cFunctionobj);
@@ -970,7 +973,7 @@ public class PaymentAction extends BasePaymentAction {
 			if (!cutOffDate.isEmpty() && cutOffDate != null) {
 				try {
 					date = sdf1.parse(cutOffDate);
-					cutOffDate1 = formatter1.format(date);
+					cutOffDate1 = df.format(date);
 				} catch (ParseException e) {
 					//
 				}
@@ -1054,6 +1057,10 @@ public class PaymentAction extends BasePaymentAction {
 					new String[] { paymentheader.getVoucherheader().getVoucherNumber() });
 			break;
 
+		case WorkflowConstants.ACTION_CREATE_AND_APPROVE:
+			message = getText("payment.approved.success",
+					new String[] { paymentheader.getVoucherheader().getVoucherNumber() });
+			break;
 		}
 		return message;
 	}

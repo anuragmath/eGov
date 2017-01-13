@@ -325,6 +325,9 @@ public class RemitRecoveryAction extends BasePaymentAction {
 		setModeOfPayment(FinancialConstants.MODEOFPAYMENT_CASH);
 		if (LOGGER.isDebugEnabled())
 			LOGGER.debug("RemitRecoveryAction | remit | end");
+		if (getBankBalanceCheck() == null || "".equals(getBankBalanceCheck())) {
+			addActionMessage(getText("payment.setupmiss.match"));
+		}
 		return "remitDetail";
 	}
 
@@ -462,11 +465,11 @@ public class RemitRecoveryAction extends BasePaymentAction {
 				subledgertDetailMap.put(VoucherConstant.DETAILKEYID, detailKey);
 				subledgertDetailMap.put(VoucherConstant.GLCODE, glcode);
 				subledgerDetails.add(subledgertDetailMap);
-				if (getBankBalanceCheck() == null || "".equals(getBankBalanceCheck())) {
-					addActionMessage(getText("payment.setupmiss.match"));
-				}
 			}
 
+		}
+		if (getBankBalanceCheck() == null || "".equals(getBankBalanceCheck())) {
+			addActionMessage(getText("payment.setupmiss.match"));
 		}
 		return subledgerDetails;
 	}
