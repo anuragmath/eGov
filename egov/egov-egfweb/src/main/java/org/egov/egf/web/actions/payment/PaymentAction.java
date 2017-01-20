@@ -1251,9 +1251,10 @@ public class PaymentAction extends BasePaymentAction {
 		final String vNumGenMode = voucherTypeForULB.readVoucherTypes("Payment");
 		if (!"Auto".equalsIgnoreCase(vNumGenMode)) {
 			voucherNumberPrefix = paymentheader.getVoucherheader().getVoucherNumber().substring(0,
-					Integer.valueOf(FinancialConstants.VOUCHERNO_TYPE_LENGTH));
+					Integer.valueOf(voucherService.getVoucherNumberFormatPrefix(FinancialConstants.VOUCHERNO_TYPE_LENGTH)));
 			voucherNumberSuffix = paymentheader.getVoucherheader().getVoucherNumber()
-					.substring(Integer.valueOf(FinancialConstants.VOUCHERNO_TYPE_LENGTH,
+					.substring(Integer.valueOf(
+							voucherService.getVoucherNumberFormatPrefix(FinancialConstants.VOUCHERNO_TYPE_LENGTH),
 							paymentheader.getVoucherheader().getVoucherNumber().length()));
 		}
 		addDropdownData("bankaccountList",
@@ -1301,9 +1302,10 @@ public class PaymentAction extends BasePaymentAction {
 		final String vNumGenMode = voucherTypeForULB.readVoucherTypes("Payment");
 		if (!"Auto".equalsIgnoreCase(vNumGenMode)) {
 			voucherNumberPrefix = paymentheader.getVoucherheader().getVoucherNumber().substring(0,
-					Integer.valueOf(FinancialConstants.VOUCHERNO_TYPE_LENGTH));
+					Integer.valueOf(voucherService.getVoucherNumberFormatPrefix(FinancialConstants.VOUCHERNO_TYPE_LENGTH)));
 			voucherNumberSuffix = paymentheader.getVoucherheader().getVoucherNumber()
-					.substring(Integer.valueOf(FinancialConstants.VOUCHERNO_TYPE_LENGTH,
+					.substring(Integer.valueOf(
+							voucherService.getVoucherNumberFormatPrefix(FinancialConstants.VOUCHERNO_TYPE_LENGTH),
 							paymentheader.getVoucherheader().getVoucherNumber().length()));
 		}
 		try {

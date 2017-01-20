@@ -91,11 +91,13 @@ import org.egov.model.voucher.VoucherDetails;
 import org.egov.pims.commons.Position;
 import org.egov.pims.service.EisUtilService;
 import org.egov.services.financingsource.FinancingSourceService;
+import org.egov.services.voucher.VoucherService;
 import org.egov.utils.Constants;
 import org.egov.utils.FinancialConstants;
 import org.egov.utils.VoucherHelper;
 import org.hibernate.HibernateException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import com.exilant.eGov.src.transactions.VoucherTypeForULB;
 
@@ -132,7 +134,9 @@ public class BaseVoucherAction extends BaseWorkFlowAction {
 	@Autowired
 	private CreateVoucher createVoucher;
 	Map<String, List<String>> voucherNames = VoucherHelper.VOUCHER_TYPE_NAMES;
-
+	@Autowired
+	@Qualifier("voucherService")
+	private VoucherService voucherService;
 	@Autowired
 	private EgovMasterDataCaching masterDataCache;
 	@Autowired
@@ -886,7 +890,8 @@ public class BaseVoucherAction extends BaseWorkFlowAction {
 	}
 
 	public Integer getVoucherNumberPrefixLength() {
-		voucherNumberPrefixLength = Integer.valueOf(FinancialConstants.VOUCHERNO_TYPE_LENGTH);
+		voucherNumberPrefixLength = Integer
+				.valueOf(voucherService.getVoucherNumberFormatPrefix(FinancialConstants.VOUCHERNO_TYPE_LENGTH));
 		return voucherNumberPrefixLength;
 	}
 
