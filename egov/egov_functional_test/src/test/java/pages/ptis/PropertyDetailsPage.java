@@ -556,6 +556,7 @@ public class PropertyDetailsPage extends BasePage {
 
     public String getAssessmentApplicationNo() {
         WebElement ele = webDriver.findElement(By.xpath(".//*[@id='modifyProperty-forward']/div[1]"));
+      //  WebElement ele = webDriver.findElement(By.xpath(".//*[@id='save']/div/table/tbody/tr/td[2]"));
         return ele.getText();
     }
 

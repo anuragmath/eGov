@@ -97,7 +97,6 @@ Feature: Create New Property
     And he enters Floor Details as <editFloorDetails>
     And he forwards for approval to billCollector
     Then edit property details get saved successfully
-    And he will copy application and assessment number
     And current user logs out
 
     When billCollector logs in
