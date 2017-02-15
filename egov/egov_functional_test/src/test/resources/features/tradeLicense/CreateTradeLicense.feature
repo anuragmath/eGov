@@ -39,6 +39,7 @@ Feature: Create Trade License
     And he choose to collectfees
     And he choose to payTax of applicationNumber
     And he choose to act upon the above application number
+    And he generates provisional certificate
     And he forwards for approver sanitaryInspector
     And he closes the acknowledgement
     And current user logs out
@@ -132,22 +133,22 @@ Feature: Create Trade License
     And he closes the acknowledgement
     And current user logs out
 
-    When sanitaryInspector logs in
-    And he choose to act upon the above application number
-    And he forwards for approver commissioner
-    And he closes the acknowledgement
-    And current user logs out
-
-    When commissioner logs in
-    And he choose to act upon the above application number
-    And he approves application
-    And he closes the acknowledgement
-    And current user logs out
-
-    When creator logs in
-    And he choose to act upon the above application number
-    And he generates the license certificate
-    And current user logs out
+#    When sanitaryInspector logs in
+#    And he choose to act upon the above application number
+#    And he forwards for approver commissioner
+#    And he closes the acknowledgement
+#    And current user logs out
+#
+#    When commissioner logs in
+#    And he choose to act upon the above application number
+#    And he approves application
+#    And he closes the acknowledgement
+#    And current user logs out
+#
+#    When creator logs in
+#    And he choose to act upon the above application number
+#    And he generates the license certificate
+#    And current user logs out
 
     Examples:
       | tradeDetailsData         | tradeLocationData           | tradeDetailsData1        |

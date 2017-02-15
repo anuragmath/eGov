@@ -146,6 +146,9 @@ public class TradeLicensePage extends BasePage {
     @FindBy(xpath = ".//*[@id='viewTradeLicense']/div/input")
     private WebElement closeButton1;
 
+    @FindBy(id = "GenerateProvisionalCertificate")
+    private WebElement GenerateProvisionalCertificateButton;
+
 
     String tradeApplicationNumber;
 
@@ -389,6 +392,13 @@ public class TradeLicensePage extends BasePage {
     public void closeAcknowledgementPage() {
         webDriver.close();
         switchToPreviouslyOpenedWindow(webDriver);
+    }
+
+    public void generateProvisionalCertificate() {
+        GenerateProvisionalCertificateButton.click();
+        switchToNewlyOpenedWindow(webDriver);
+        webDriver.close();
+        switchToNewlyOpenedWindow(webDriver);
     }
 }
 

@@ -46,6 +46,7 @@ public class TradeLicenseSteps extends BaseSteps implements En {
         And("^he copy trade application number$", () -> {
             String applicationNumber = pageStore.get(TradeLicensePage.class).getApplicationNumber();
             scenarioContext.setApplicationNumber(applicationNumber);
+            System.out.println(applicationNumber);
         });
         And("^he enters fee details of legency trade license$", () -> {
             pageStore.get(TradeLicensePage.class).enterlegencyDetails();
@@ -99,6 +100,9 @@ public class TradeLicenseSteps extends BaseSteps implements En {
         });
         And("^he closes acknowledgement page$", () -> {
             pageStore.get(TradeLicensePage.class).closeAcknowledgementPage();
+        });
+        And("^he generates provisional certificate$", () -> {
+            pageStore.get(TradeLicensePage.class).generateProvisionalCertificate();
         });
 
 
