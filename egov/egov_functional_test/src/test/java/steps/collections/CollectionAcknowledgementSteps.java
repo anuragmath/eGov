@@ -1,10 +1,8 @@
 package steps.collections;
 
-import cucumber.api.PendingException;
 import cucumber.api.java8.En;
 import pages.collections.CollectionAcknowledgementPage;
-import pages.collections.CollectionsPage;
-import pages.ptis.PropertyAcknowledgementPage;
+import pages.propertyTax.PropertyAcknowledgementPage;
 import steps.BaseSteps;
 
 

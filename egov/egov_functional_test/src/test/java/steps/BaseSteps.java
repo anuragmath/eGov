@@ -18,7 +18,7 @@ public class BaseSteps {
     public static PageStore pageStore;
 
     public static ScenarioContext scenarioContext;
-    protected String ptisTestDataFileName = "PTISTestData";
+    protected String ptisTestDataFileName = "propertyTaxTestData";
     protected String collectionsTestDataFileName = "CollectionsTestData";
     protected String lineEstimateTestDataFileName = "lineEstimateTestData";
     protected String loginTestDataFileName = "loginTestData";

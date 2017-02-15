@@ -1,6 +1,5 @@
 package pages.tradeLicense;
 
-import entities.ptis.ApprovalDetails;
 import entities.tradeLicense.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
@@ -12,7 +11,6 @@ import pages.BasePage;
 import java.util.List;
 
 import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Created by bimal on 20/12/16.

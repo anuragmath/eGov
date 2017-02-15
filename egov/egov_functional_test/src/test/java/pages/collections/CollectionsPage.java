@@ -1,19 +1,15 @@
 package pages.collections;
 
-import com.gargoylesoftware.htmlunit.javascript.host.Window;
 import entities.collections.ChallanHeaderDetails;
-import entities.collections.ChequeDetails;
-import entities.ptis.ApprovalDetails;
+import entities.propertyTax.ApprovalDetails;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.*;
 import pages.BasePage;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class CollectionsPage extends BasePage {
 
@@ -276,7 +272,7 @@ public class CollectionsPage extends BasePage {
     }
 
     public void propertyTaxOnlinePaymentLink() {
-        driver.navigate().to("http://kurnool-qa.egovernments.org/ptis/citizen/search/search-searchByAssessmentForm.action");
+        driver.navigate().to("http://kurnool-qa.egovernments.org/propertyTax/citizen/search/search-searchByAssessmentForm.action");
     }
 
     public void enerterAssessmentNumber(String assessmentNumber) {

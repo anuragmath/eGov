@@ -1,7 +1,6 @@
 package pages.wcms;
 
-import com.gargoylesoftware.htmlunit.javascript.host.canvas.ext.WEBGL_compressed_texture_s3tc;
-import entities.ptis.*;
+import entities.propertyTax.*;
 import entities.wcms.EnclosedDocument;
 import entities.wcms.FieldInspectionDetails;
 import org.openqa.selenium.*;
@@ -368,13 +367,13 @@ public class WaterChargeManagementPage extends BasePage {
         enterText(documentDate3TextBox, currentDate.format(new Date()));
 
         waitForElementToBeClickable(browse1Button, webDriver);
-        browse1Button.sendKeys(System.getProperty("user.dir") + "/src/test/resources/PTISTestData.xlsx");
+        browse1Button.sendKeys(System.getProperty("user.dir") + "/src/test/resources/propertyTaxTestData.xlsx");
 
         waitForElementToBeClickable(browse2Button, webDriver);
-        browse2Button.sendKeys(System.getProperty("user.dir") + "/src/test/resources/PTISTestData.xlsx");
+        browse2Button.sendKeys(System.getProperty("user.dir") + "/src/test/resources/propertyTaxTestData.xlsx");
 
         waitForElementToBeClickable(browse3Button, webDriver);
-        browse3Button.sendKeys(System.getProperty("user.dir") + "/src/test/resources/PTISTestData.xlsx");
+        browse3Button.sendKeys(System.getProperty("user.dir") + "/src/test/resources/propertyTaxTestData.xlsx");
     }
 
     public void enterWaterApprovalDetails(ApprovalDetails approvalDetails){

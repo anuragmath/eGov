@@ -65,6 +65,7 @@ Feature: Create New Property
       | residentialPrivate    | bimal        | addressOne             | assessmentNewProperty | all              | defaultConstructionType | firstFloor   | documentSelect  |
 
    # DATA ENTRY SCREEN #
+
   @Sanity @PropertyTax
   Scenario: Registered user create property through data entry screen
 
@@ -77,6 +78,7 @@ Feature: Create New Property
     And current user logs out
 
    # ADDITION ALTERATION SCREEN #
+
   @Sanity @PropertyTax
   Scenario Outline: Registered user Update existing property
 
@@ -138,6 +140,7 @@ Feature: Create New Property
         |  assessmentAdditionProperty    |        all           |  firstFloorAdditionaltaration|
 
   # TRANSFER OF OWNERSHIP SCREEN #
+
   @Sanity @PropertyTax
   Scenario Outline: Register Choose to do title Transfer
 
@@ -210,6 +213,7 @@ Feature: Create New Property
       |register           |
 
   # CREATE REVISION PETITION #
+
   @Sanity @PropertyTax
   Scenario Outline: Register user choose to do revision petition of property
 
@@ -257,7 +261,6 @@ Feature: Create New Property
 
     And chooses to act upon the above assessment
     And he does a digital signature
-#    Then user will be notified by "Successfully"
     When commissioner closes acknowledgement
     And current user logs out
 
@@ -330,6 +333,7 @@ Feature: Create New Property
 
 
     # GENERAL REVISION PETITION #
+
    @Sanity @PropertyTax
    Scenario Outline: Register user choose to do general revision petition of property
 

@@ -1,7 +1,6 @@
 package pages.councilManagement;
 
 import entities.councilManagement.CreatePreambleDetails;
-import entities.ptis.ApprovalDetails;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
@@ -11,11 +10,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import pages.BasePage;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static com.jayway.awaitility.Awaitility.await;
-import static java.awt.SystemColor.window;
-import static java.util.concurrent.TimeUnit.SECONDS;
 
 /**
  * Created by tester1 on 1/4/2017.
@@ -106,7 +102,7 @@ public class CouncilManagementPage extends BasePage {
         new Select(preambleDepartment).selectByVisibleText(createPreambleDetails.getPreambleDepartment());
         enterText(sanctionAmount, createPreambleDetails.getAmount());
         enterText(gistOfPreamble, createPreambleDetails.getGistOfPreamble());
-        attachment.sendKeys(System.getProperty("user.dir") + "/src/test/resources/PTISTestData.xlsx");
+        attachment.sendKeys(System.getProperty("user.dir") + "/src/test/resources/propertyTaxTestData.xlsx");
         Select sel=new Select(wards);
         for(int i=1;i<3;i++)
         {

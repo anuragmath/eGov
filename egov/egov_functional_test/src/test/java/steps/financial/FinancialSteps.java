@@ -1,20 +1,15 @@
 package steps.financial;
 
-import cucumber.api.PendingException;
 import cucumber.api.java8.En;
 import entities.financial.FinancialBankDetails;
 import entities.financial.FinancialExpenseBillDetails;
 import entities.financial.FinancialJournalVoucherDetails;
-import entities.ptis.ApprovalDetails;
-import entities.wcms.FieldInspectionDetails;
+import entities.propertyTax.ApprovalDetails;
 import org.junit.Assert;
-import pages.DashboardPage;
 import pages.financial.FinancialPage;
 import steps.BaseSteps;
 import utils.ExcelReader;
-import utils.ScenarioContext;
 
-import java.io.IOException;
 import java.text.ParseException;
 
 /**

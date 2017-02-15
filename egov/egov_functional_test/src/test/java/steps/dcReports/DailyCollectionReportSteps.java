@@ -4,7 +4,7 @@ import cucumber.api.java8.En;
 import entities.dcReports.PTReport;
 import entities.dcReports.VLTReport;
 import pages.dcReports.DailyCollectionReportPage;
-import pages.ptis.PropertyAcknowledgementPage;
+import pages.propertyTax.PropertyAcknowledgementPage;
 import steps.BaseSteps;
 import utils.ExcelReader;
 

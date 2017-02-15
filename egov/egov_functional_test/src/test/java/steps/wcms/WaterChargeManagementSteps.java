@@ -1,8 +1,7 @@
 package steps.wcms;
 
-import cucumber.api.PendingException;
 import cucumber.api.java8.En;
-import entities.ptis.*;
+import entities.propertyTax.*;
 import entities.wcms.EnclosedDocument;
 import entities.wcms.FieldInspectionDetails;
 import pages.DashboardPage;
