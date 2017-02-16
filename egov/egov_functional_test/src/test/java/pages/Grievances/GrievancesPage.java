@@ -117,7 +117,9 @@ public class GrievancesPage extends BasePage {
     }
 
     public void enterGrievanceDetails(CreateComplaintDetails createComplaintDetails) {
+    waitForElementToBeClickable(complaintTypeCategorySelect,webDriver);
     new Select(complaintTypeCategorySelect).selectByVisibleText(createComplaintDetails.getGrievanceCategory());
+    waitForElementToBeClickable(complaintTypeSelect,webDriver);
     new Select(complaintTypeSelect).selectByVisibleText(createComplaintDetails.getGrievanceType());
     enterText(grievanceDetailsText, createComplaintDetails.getGrievanceDetails());
     enterText(grievanceLocationText, "Aavanthi Nagar");
@@ -129,16 +131,18 @@ public class GrievancesPage extends BasePage {
     }
 
     public void getRegisterComplaintPage() {
+    waitForElementToBeClickable(newRequestLink,webDriver);
     newRequestLink.click();
     waitForElementToBeClickable(registerComplaint, webDriver);
     registerComplaint.click();
     switchToNewlyOpenedWindow(webDriver);
+    webDriver.navigate().refresh();
     }
 
     public String getCRN() {
         waitForElementToBeVisible(CRNNumber, webDriver);
         String CrnNum=CRNNumber.getText();
-        closeButton.click();
+        jsClick(closeButton,webDriver);
         switchToPreviouslyOpenedWindow(webDriver);
         return CrnNum;
     }
@@ -152,6 +156,7 @@ public class GrievancesPage extends BasePage {
     }
 
     public String officialMarkStatus(String status) {
+        waitForElementToBeClickable(selectStatus,webDriver);
         new Select(selectStatus).selectByVisibleText(status);
         enterText(incMessageBox, status);
         submitButton.click();
@@ -182,6 +187,7 @@ public class GrievancesPage extends BasePage {
     public String createInCitizen() {
         createGrievanceButton.click();
         WebElement element= webDriver.findElement(By.xpath(".//*[@id='main']/div[1]/div/div/div[1]/div/strong"));
+        waitForElementToBeVisible(element,webDriver);
         return element.getText();
     }
 

@@ -5,6 +5,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.safari.SafariDriver;
@@ -17,6 +18,9 @@ public class LocalDriver {
 
         DesiredCapabilities capabilities = new DesiredCapabilities();
         if (browser.equals("firefox")) {
+            FirefoxOptions options= new FirefoxOptions();
+            options.addArguments("moz:firefoxOptions");
+            capabilities.setCapability(FirefoxOptions.FIREFOX_OPTIONS, options);
             setFirefoxDriverBasedOnOperatingSystem();
             return new FirefoxDriver();
         }
