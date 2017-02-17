@@ -407,10 +407,11 @@ public class PropertyDetailsPage extends BasePage {
     public void forward() {
         forwardButton.click();
     }
-    public String approve() {
+
+    public void approve() {
         approveButton.click();
-        waitForElementToBeVisible(commAssessmentNo, webDriver);
-        return commAssessmentNo.getText();
+//        waitForElementToBeVisible(commAssessmentNo, webDriver);
+//        return commAssessmentNo.getText();
     }
 
     public String approveForCreation() {

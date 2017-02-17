@@ -103,9 +103,17 @@ public class PropertyAcknowledgementPage extends BasePage {
         return ele.getText();
     }
 
-
     public String getActualMsgAssessment() {
         WebElement ele=driver.findElement(By.xpath(".//*[@id='createProperty-forward']/div/table/tbody/tr[1]/td"));
         return ele.getText();
+    }
+
+    public String getAssessmentNumber() {
+
+        List<WebElement> elements = driver.findElement(By.tagName("table")).findElement(By.tagName("tbody"))
+                .findElement(By.tagName("tr")).findElement(By.tagName("td")).findElements(By.tagName("span"));
+        return elements.get(1).getText();
+
+
     }
 }

@@ -50,8 +50,8 @@ public class PropertyDetailsPageSteps extends BaseSteps implements En {
             pageStore.get(PropertyDetailsPage.class).forward();
         });
         And("^he approved the property with remarks \"([^\"]*)\"$", (String remarks) -> {
-            String assessmentNo = pageStore.get(PropertyDetailsPage.class).approve();
-            scenarioContext.setCommAssessmentNumber(assessmentNo);
+            pageStore.get(PropertyDetailsPage.class).approve();
+          //  scenarioContext.setCommAssessmentNumber(assessmentNo);
         });
         And("^he does a digital signature$", () -> {
             pageStore.get(PropertyDetailsPage.class).digitallySign();
@@ -71,7 +71,7 @@ public class PropertyDetailsPageSteps extends BaseSteps implements En {
             pageStore.get(PropertyDetailsPage.class).chooseToSubmit();
         });
         And("^chooses to act upon the above application$", () -> {
-           pageStore.get(DashboardPage.class).openApplication(scenarioContext.getAssessmentNumber());
+           pageStore.get(DashboardPage.class).openApplication(scenarioContext.getApplicationNumber());
         });
         And("^he approved the property with remarks \"([^\"]*)\" for transfer of ownership$", (String arg0) -> {
             String assessmentNo = pageStore.get(PropertyDetailsPage.class).approveForCreation();
